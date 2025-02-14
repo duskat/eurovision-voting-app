@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isValidString(field) {
+      return field is string && field.size() > 0;
+    }
+
+    function isAuthenticated() {
+      return request.auth != null || 
+             (request.auth == null && 
+              exists(/databases/$(database)/documents/guestUsers/**));
+    }
+
+    function isValidVote() {
+      return request.resource.data.votes is list &&
+             request.resource.data.votes.size() == 3;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isGoogleUser() {
+      return request.auth != null && 
+             request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+
+    function isGuestUser(userId) {
+      return userId.matches('^guest_.*');
+    }
+
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'dprybysh@gmail.com';
+    }
+
+    // Results collection
+    match /results/{resultId} {
+      allow read: if true;
+      // Only allow writes from admin
+      allow write: if isAdmin();
+    }
+
+    // Votes collection
+    match /votes/{voteId} {
+      allow read: if true;
+      // Allow users to create their own votes
+      allow create: if request.auth != null;
+      // Only allow admin to delete votes
+      allow delete: if isAdmin();
+    }
+
+    // Guest users collection
+    match /guestUsers/{userId} {
+      allow read: if true;
+      allow create: if request.auth == null;
+      allow update, delete: if false;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Allow querying for username availability
+    match /{collection=**} {
+      allow list: if 
+        // Only allow queries for username checks
+        request.query.filters.size() == 1 && 
+        'normalizedUsername' in request.query.filters;
+    }
+  }
+} 

@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* For better button interaction */
+button {
+  cursor: pointer;
+  outline: none;
+}
+
+button:active {
+  transform: scale(0.98);
+}
