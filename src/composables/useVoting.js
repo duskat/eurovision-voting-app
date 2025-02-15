@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { db, auth } from '../firebase/config';
 import {
   collection,
@@ -15,7 +15,12 @@ import {
   where,
   orderBy,
   limit,
+  increment,
+  deleteDoc,
 } from 'firebase/firestore';
+import { useAuth } from './useAuth';
+
+const VOTES_STORAGE_KEY = 'eurovision_votes';
 
 const countries = ref([]);
 const isLoading = ref(true);
@@ -28,13 +33,45 @@ const selectedVotes = ref({
   third: '',
 });
 
+const { user, guestUser } = useAuth();
+
+const getUserId = computed(() => {
+  if (user.value?.type === 'google') {
+    // For Google users, ensure we have the uid
+    if (!user.value.uid) {
+      console.error('No UID found for Google user:', user.value);
+      return null;
+    }
+    return user.value.uid;
+  }
+  // For guest users, check both guestUser and user
+  if (guestUser.value?.id) {
+    return guestUser.value.id;
+  }
+  return null;
+});
+
+const hasVoted = computed(() => {
+  if (!getUserId.value) return false;
+  const storedVotes = localStorage.getItem(VOTES_STORAGE_KEY);
+  if (!storedVotes) return false;
+
+  const votes = JSON.parse(storedVotes);
+  return !!votes[getUserId.value];
+});
+
+const canUpdateVote = computed(() => {
+  // Allow both Google and guest users to update their votes
+  return !!getUserId.value;
+});
+
 const loadCountries = async () => {
   try {
     const querySnapshot = await getDocs(collection(db, 'results'));
     countries.value = querySnapshot.docs.map((doc) => ({
       id: doc.id,
       name: doc.id,
-      totalPoints: doc.data().totalPoints,
+      totalPoints: doc.data().totalPoints || 0,
     }));
     error.value = null;
   } catch (err) {
@@ -46,144 +83,131 @@ const loadCountries = async () => {
 };
 
 export function useVoting() {
-  // Check if user has already voted
   const checkExistingVote = async () => {
+    if (!getUserId.value) return null;
+
     try {
-      const currentUser = auth.currentUser;
-      const guestUser = JSON.parse(localStorage.getItem('guestUser'));
-      const userId = currentUser?.uid || guestUser?.uid;
+      // Check for existing vote in Firestore for all users
+      const voteRef = doc(db, 'votes', getUserId.value);
+      const voteDoc = await getDoc(voteRef);
 
-      if (!userId) return null;
-
-      const votesQuery = query(
-        collection(db, 'votes'),
-        where('userId', '==', userId)
-      );
-
-      const snapshot = await getDocs(votesQuery);
-      if (!snapshot.empty) {
-        const voteDoc = snapshot.docs[0];
-        currentVote.value = {
-          id: voteDoc.id,
-          ...voteDoc.data(),
-        };
-        return currentVote.value;
+      if (voteDoc.exists()) {
+        return voteDoc.data();
       }
       return null;
-    } catch (err) {
-      console.error('Error checking existing vote:', err);
-      error.value = 'Failed to check existing vote';
+    } catch (error) {
+      console.error('Error checking existing vote:', error);
       return null;
     }
   };
 
-  // Submit or update votes
   const submitVotes = async (selectedCountries) => {
-    try {
-      const currentUser = auth.currentUser;
-      const guestUser = JSON.parse(localStorage.getItem('guestUser'));
-      const userId = currentUser?.uid || guestUser?.uid;
-      const userDisplayName =
-        currentUser?.displayName || guestUser?.displayName;
+    let currentUserId;
 
-      if (!userId) {
-        throw new Error('No user authenticated');
+    if (user.value?.type === 'google') {
+      if (user.value.uid) {
+        currentUserId = user.value.uid;
       }
+    } else if (guestUser.value) {
+      currentUserId = `name_${guestUser.value.displayName}`;
+    } else if (user.value?.uid) {
+      currentUserId = user.value.uid;
+    }
 
-      const newVotes = selectedCountries.map((country, index) => ({
-        countryId: country.id,
-        countryName: country.name,
-        points: index === 0 ? 12 : index === 1 ? 10 : 8,
-      }));
+    if (!currentUserId) {
+      console.error('No valid user ID found');
+      throw new Error('Please sign in or enter your name to vote');
+    }
+
+    try {
+      isLoading.value = true;
 
       await runTransaction(db, async (transaction) => {
-        // Get all affected documents
-        const resultDocs = new Map();
-        const affectedCountries = new Set();
+        // Step 1: Perform all reads first
+        const voteRef = doc(db, 'votes', currentUserId);
+        const voteDoc = await transaction.get(voteRef);
 
-        // Add countries from new votes
-        newVotes.forEach((vote) => affectedCountries.add(vote.countryId));
+        // Read all affected country documents
+        const countryDocs = new Map();
 
-        // Get existing vote if any
-        let existingVoteDoc = null;
-        if (currentVote.value?.id) {
-          const voteRef = doc(db, 'votes', currentVote.value.id);
-          existingVoteDoc = await transaction.get(voteRef);
-
-          // Add countries from existing vote
-          if (existingVoteDoc.exists()) {
-            existingVoteDoc
-              .data()
-              .votes.forEach((vote) => affectedCountries.add(vote.countryId));
-          }
-        }
-
-        // Get all affected result documents
-        for (const countryId of affectedCountries) {
-          const resultRef = doc(db, 'results', countryId);
-          resultDocs.set(countryId, await transaction.get(resultRef));
-        }
-
-        // Update points
-        const pointsUpdate = new Map();
-
-        // Remove old points if updating
-        if (existingVoteDoc?.exists()) {
-          existingVoteDoc.data().votes.forEach((vote) => {
-            const current = pointsUpdate.get(vote.countryId) || 0;
-            pointsUpdate.set(vote.countryId, current - vote.points);
-          });
-        }
-
-        // Add new points
-        newVotes.forEach((vote) => {
-          const current = pointsUpdate.get(vote.countryId) || 0;
-          pointsUpdate.set(vote.countryId, current + vote.points);
-        });
-
-        // Apply updates
-        // Delete old vote if exists
-        if (existingVoteDoc?.exists()) {
-          transaction.delete(existingVoteDoc.ref);
-        }
-
-        // Create new vote with user info
-        const newVoteRef = doc(collection(db, 'votes'));
-        const voteData = {
-          votes: newVotes,
-          userId,
-          userDisplayName,
-          timestamp: serverTimestamp(),
-          lastModified: serverTimestamp(),
-        };
-        transaction.set(newVoteRef, voteData);
-
-        // Update results
-        for (const [countryId, pointChange] of pointsUpdate) {
-          const resultDoc = resultDocs.get(countryId);
-          if (resultDoc?.exists()) {
-            const currentPoints = resultDoc.data().totalPoints || 0;
-            transaction.update(resultDoc.ref, {
-              totalPoints: Math.max(0, currentPoints + pointChange),
+        // Read existing vote's country docs
+        if (voteDoc.exists()) {
+          const oldVotes = voteDoc.data().votes;
+          for (const vote of oldVotes) {
+            const countryRef = doc(db, 'results', vote.countryId);
+            const countryDoc = await transaction.get(countryRef);
+            countryDocs.set(vote.countryId, {
+              ref: countryRef,
+              doc: countryDoc,
             });
           }
         }
 
-        // Update local reference
-        currentVote.value = {
-          id: newVoteRef.id,
-          ...voteData,
+        // Read new vote's country docs
+        for (const country of selectedCountries) {
+          if (country && !countryDocs.has(country.id)) {
+            const countryRef = doc(db, 'results', country.id);
+            const countryDoc = await transaction.get(countryRef);
+            countryDocs.set(country.id, { ref: countryRef, doc: countryDoc });
+          }
+        }
+
+        // Step 2: Calculate point changes
+        const pointUpdates = new Map();
+
+        // Remove old vote points
+        if (voteDoc.exists()) {
+          const oldVotes = voteDoc.data().votes;
+          for (const vote of oldVotes) {
+            pointUpdates.set(vote.countryId, -vote.points);
+          }
+        }
+
+        // Add new vote points
+        selectedCountries.forEach((country, index) => {
+          const points = [12, 10, 8][index];
+          const currentPoints = pointUpdates.get(country.id) || 0;
+          pointUpdates.set(country.id, currentPoints + points);
+        });
+
+        // Step 3: Perform all writes
+        // Update country points
+        for (const [countryId, pointDiff] of pointUpdates.entries()) {
+          const { ref: countryRef, doc: countryDoc } =
+            countryDocs.get(countryId);
+          const currentPoints = countryDoc.exists()
+            ? countryDoc.data().totalPoints || 0
+            : 0;
+          const newPoints = Math.max(0, currentPoints + pointDiff);
+
+          transaction.update(countryRef, { totalPoints: newPoints });
+        }
+
+        // Save the new vote
+        const voteData = {
+          userId: currentUserId,
+          userType: user.value?.type === 'google' ? 'google' : 'guest',
+          votes: selectedCountries.map((country, index) => ({
+            countryId: country.id,
+            points: [12, 10, 8][index],
+          })),
+          timestamp: serverTimestamp(),
         };
+
+        transaction.set(voteRef, voteData);
+        currentVote.value = voteData;
       });
 
-      return true;
+      error.value = null;
     } catch (err) {
       console.error('Error submitting votes:', err);
-      throw new Error('Failed to submit votes');
+      error.value = 'Failed to submit votes';
+      throw err;
+    } finally {
+      isLoading.value = false;
     }
   };
 
-  // Add function to get user's vote history
   const getUserVoteHistory = async (userId) => {
     try {
       const votesQuery = query(
@@ -208,7 +232,6 @@ export function useVoting() {
     }
   };
 
-  // Clear current vote (for testing/development)
   const clearCurrentVote = () => {
     currentVote.value = null;
   };
@@ -242,6 +265,28 @@ export function useVoting() {
     }
   };
 
+  const clearVotes = async () => {
+    if (!getUserId.value) return;
+
+    try {
+      const voteRef = doc(db, 'votes', getUserId.value);
+      await deleteDoc(voteRef);
+
+      const storedVotes = localStorage.getItem(VOTES_STORAGE_KEY);
+      if (storedVotes) {
+        const votes = JSON.parse(storedVotes);
+        delete votes[getUserId.value];
+        localStorage.setItem(VOTES_STORAGE_KEY, JSON.stringify(votes));
+      }
+
+      currentVote.value = null;
+      await loadCountries();
+    } catch (error) {
+      console.error('Error clearing votes:', error);
+      throw error;
+    }
+  };
+
   onMounted(() => {
     loadCountries();
     checkExistingVote();
@@ -259,5 +304,8 @@ export function useVoting() {
     checkExistingVote,
     clearCurrentVote,
     getUserVoteHistory,
+    hasVoted,
+    canUpdateVote,
+    clearVotes,
   };
 }

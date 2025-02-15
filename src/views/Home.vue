@@ -1,306 +1,586 @@
 <template>
-  <div 
-    class="min-h-screen flex flex-col items-center justify-center p-4 transition-colors duration-300"
-    :class="isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-indigo-50 to-purple-50'"
-  >
-    <!-- Theme Toggle -->
-    <button 
-      @click="toggleTheme" 
-      class="fixed top-4 right-4 p-2 rounded-full transition-colors duration-300"
-      :class="isDark ? 'bg-gray-800 text-yellow-400' : 'bg-white text-gray-800 shadow-lg'"
-    >
-      <svg v-if="isDark" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-      <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-      </svg>
-    </button>
-
-    <!-- Main Content -->
-    <div class="w-full max-w-md">
-      <!-- Logo & Title -->
-      <div class="text-center mb-8">
-        <div class="relative inline-block">
-          <div class="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 blur-lg opacity-30"></div>
-          <h1 
-            class="relative text-5xl font-extrabold mb-2 bg-clip-text text-transparent bg-gradient-to-r transition-colors duration-300"
-            :class="isDark ? 'from-purple-400 to-pink-400' : 'from-purple-600 to-pink-600'"
-          >
-            Eurovision
-          </h1>
-        </div>
-        <p 
-          class="text-lg font-medium transition-colors duration-300"
-          :class="isDark ? 'text-gray-400' : 'text-gray-600'"
-        >
-          Vote for your favorites
-        </p>
+  <div class="page-container">
+    <div class="content-container">
+      <div class="title-container">
+        <h1 class="page-title">Eurovision Voting</h1>
       </div>
+
+
 
       <!-- Loading State -->
-      <div v-if="isLoading" class="text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-        <p class="text-gray-600">Loading...</p>
+      <div v-if="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading...</p>
       </div>
 
-      <div v-else-if="!user && !guestUser" class="space-y-6">
-        <!-- Name-based login -->
-        <div 
-          class="rounded-2xl p-6 backdrop-blur-lg transition-all duration-300"
-          :class="isDark ? 'bg-gray-800/50' : 'bg-white/80 shadow-xl'"
-        >
-          <h2 
-            class="text-xl font-semibold mb-4 transition-colors duration-300"
-            :class="isDark ? 'text-white' : 'text-gray-800'"
-          >
-            Quick Login
+      <!-- Logged In State -->
+      <div v-else-if="isLoggedIn" class="welcome-section">
+        <div class="user-header">
+          <h2 class="page-title">
+            Welcome, {{ userName }}!
+            <span v-if="isAdmin" class="admin-badge" title="Admin User">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.25 9.75c0 5.942 4.064 10.933 9.563 12.348a.75.75 0 00.674 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm3.094 8.016a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+              </svg>
+            </span>
           </h2>
-          <div class="space-y-4">
-            <div class="relative">
-              <input
-                id="name"
-                v-model="name"
-                type="text"
-                class="w-full px-4 py-3 rounded-xl border-2 bg-transparent transition-all duration-300 focus:ring-2 focus:ring-offset-2"
-                :class="isDark ? 'border-gray-700 text-white focus:border-purple-500 focus:ring-purple-500' : 'border-gray-200 text-gray-900 focus:border-purple-500 focus:ring-purple-500'"
-                placeholder="Enter your name"
-                @keyup.enter="handleNameLogin"
-              />
-              <!-- Error Message -->
-              <div
-                v-if="nameError"
-                class="absolute -bottom-6 left-0 text-sm text-red-500"
-              >
-                {{ nameError }}
-              </div>
-            </div>
-
-            <!-- Login Information Note -->
-            <div 
-              class="p-4 rounded-lg text-sm"
-              :class="isDark ? 'bg-gray-800/50 text-gray-300' : 'bg-blue-50 text-gray-600'"
-            >
-              <p class="mb-2">
-                <span class="font-medium">Quick Login:</span> You can log in with your name to start voting right away.
-              </p>
-              <p>
-                <span class="font-medium">Note:</span> Once you log out, you won't be able to edit your votes. To edit your votes later, please use Google login instead.
-              </p>
-            </div>
-
-            <button
-              @click="handleNameLogin"
-              class="w-full py-3 px-6 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2"
-              :class="isDark ? 'bg-purple-600 hover:bg-purple-700 text-white focus:ring-purple-500' : 'bg-purple-500 hover:bg-purple-600 text-white focus:ring-purple-500'"
-              :disabled="isLoading || !name.trim()"
-            >
-              Continue with Name
-            </button>
-          </div>
-        </div>
-
-        <!-- Google login -->
-        <div 
-          class="rounded-2xl p-6 backdrop-blur-lg transition-all duration-300"
-          :class="isDark ? 'bg-gray-800/50' : 'bg-white/80 shadow-xl'"
-        >
-          <h2 
-            class="text-xl font-semibold mb-4 transition-colors duration-300"
-            :class="isDark ? 'text-white' : 'text-gray-800'"
-          >
-            Or Sign In With
-          </h2>
-          <button
-            @click="handleGoogleLogin"
-            class="w-full py-3 px-6 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center space-x-2"
-            :class="isDark ? 'bg-white hover:bg-gray-100 text-gray-900' : 'bg-white hover:bg-gray-50 text-gray-900 shadow-md'"
-            :disabled="isLoading"
-          >
-            <svg class="w-5 h-5" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              />
+          <button @click="handleLogout" class="logout-button">
+            <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            <span>Continue with Google</span>
+            Logout
           </button>
         </div>
+        <p class="welcome-text">Ready to cast your votes for Eurovision?</p>
+        <div class="action-buttons">
+          <router-link to="/vote" class="primary-button">Cast Your Vote</router-link>
+          <router-link to="/leaderboard" class="secondary-button">View Leaderboard</router-link>
+        </div>
+              <!-- Admin Controls (only show for admin) -->
+      <div v-if="isAdmin" class="admin-controls">
+        <button
+          @click="showDeleteUsersModal = true"
+          class="admin-danger-button flex items-center justify-center gap-2 rounded-full"
+          :disabled="isDeletingUsers"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          <span v-if="isDeletingUsers">Deleting Users...</span>
+          <span v-else>Delete All Users</span>
+        </button>
+
+        <button
+          @click="confirmReset"
+          class="admin-danger-button flex items-center justify-center gap-2 rounded-full"
+          :disabled="isResetting"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" />
+          </svg>
+          <span v-if="isResetting">Resetting...</span>
+          <span v-else>Reset All Votes</span>
+        </button>
+      </div>
+        <div class="user-info">
+          <p class="user-type">
+            Logged in as {{ userType === 'guest' ? 'Guest' : 'Google User' }}
+          </p>
+        </div>
       </div>
 
-      <!-- Authenticated State -->
-      <div 
-        v-else 
-        class="text-center space-y-6 rounded-2xl p-6 backdrop-blur-lg transition-all duration-300"
-        :class="isDark ? 'bg-gray-800/50' : 'bg-white/80 shadow-xl'"
-      >
-        <h2 
-          class="text-2xl font-semibold transition-colors duration-300"
-          :class="isDark ? 'text-white' : 'text-gray-800'"
-        >
-          Welcome, {{ user?.displayName || guestUser?.displayName }}!
-        </h2>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <router-link
-            to="/vote"
-            class="px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2"
-            :class="isDark ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-green-500 hover:bg-green-600 text-white'"
-          >
-            Vote Now
-          </router-link>
-          <router-link
-            to="/leaderboard"
-            class="px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2"
-            :class="isDark ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white'"
-          >
-            View Leaderboard
-          </router-link>
-        </div>
-        <button
-          @click="handleLogout"
-          :disabled="logoutStatus.loading"
-          class="w-full px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 relative"
-          :class="isDark ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-red-500 hover:bg-red-600 text-white'"
-        >
-          <span :class="{ 'opacity-0': logoutStatus.loading }">Logout</span>
-          <!-- Loading Spinner -->
-          <div
-            v-if="logoutStatus.loading"
-            class="absolute inset-0 flex items-center justify-center"
-          >
-            <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+      <!-- Login State -->
+      <div v-else class="login-section">
+        <h2 class="page-title">Eurovision Voting App</h2>
+        <p class="login-text">Please log in to continue</p>
+        
+        <!-- Quick Login Form -->
+        <form @submit.prevent="handleQuickLogin" class="quick-login-form">
+          <div class="input-group">
+            <input
+              id="name-input"
+              v-model="nameInput"
+              type="text"
+              name="name"
+              placeholder="Enter your name"
+              class="name-input"
+              :class="{ 'error': nameError }"
+              required
+              minlength="2"
+              maxlength="50"
+              autocomplete="name"
+            />
           </div>
-        </button>
-        <!-- Error Message -->
-        <div
-          v-if="logoutStatus.error"
-          class="text-red-500 text-sm mt-2"
-        >
-          {{ logoutStatus.error }}
+          <button 
+            type="submit" 
+            class="guest-button" 
+            :disabled="!isValidName"
+          >
+            Continue as Guest
+          </button>
+          <p class="quick-login-note">
+            Quick login with name allows you to start voting instantly. 
+            Note: Once you log out, you won't be able to edit your votes. 
+            For permanent access, use Google login instead.
+          </p>
+        </form>
+
+        <div class="divider">
+          <span>or</span>
         </div>
+
+        <div class="google-button-container">
+          <GoogleLogin @success="handleLoginSuccess" @error="handleLoginError" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Users Confirmation Modal -->
+  <div v-if="showDeleteUsersModal" class="modal-backdrop">
+    <div class="modal-content">
+      <h3 class="text-xl font-bold mb-4">Delete All Users</h3>
+      <div class="text-gray-600 mb-6">
+        <p class="mb-2">Are you sure you want to delete all users?</p>
+        <p class="mb-2">This will:</p>
+        <ul class="list-disc ml-6 mt-2">
+          <li>Remove all user accounts</li>
+          <li>Delete all associated votes</li>
+          <li>This action cannot be undone</li>
+        </ul>
+      </div>
+      <div class="flex justify-end space-x-4">
+        <button
+          @click="showDeleteUsersModal = false"
+          class="secondary-button"
+        >
+          Cancel
+        </button>
+        <button
+          @click="deleteAllUsers"
+          class="admin-danger-button"
+          :disabled="isDeletingUsers"
+        >
+          {{ isDeletingUsers ? 'Deleting...' : 'Delete All Users' }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useAuth } from '../composables/useAuth';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import GoogleLogin from '../components/GoogleLogin.vue';
+import { useAuth } from '../composables/useAuth';
+import { useVoting } from '../composables/useVoting';
+import { db } from '../firebase/config';
+import { runTransaction, getDocs, collection } from 'firebase/firestore';
 
 const router = useRouter();
-const { user, guestUser, error, isLoading, signInWithGoogle, signInWithName, logout } = useAuth(router);
-const name = ref('');
-const isDark = ref(localStorage.getItem('theme') === 'dark');
-const nameError = ref('');
-const logoutStatus = ref({ loading: false, error: null });
+const { 
+  isLoggedIn, 
+  userType,
+  login, 
+  logout, 
+  signInWithName,
+  isLoading,
+  user,
+  guestUser
+} = useAuth(router);
+const { resetAllResults } = useVoting();
 
-const toggleTheme = () => {
-  isDark.value = !isDark.value;
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light');
-  document.documentElement.classList.toggle('dark', isDark.value);
-};
+const nameInput = ref('');
+const nameError = ref(false);
 
-const handleGoogleLogin = async () => {
-  try {
-    await signInWithGoogle();
-    router.push('/vote');
-  } catch (err) {
-    console.error('Google login error:', err);
-    nameError.value = 'Failed to sign in with Google. Please try again.';
+const isValidName = computed(() => {
+  const trimmedName = nameInput.value.trim();
+  return trimmedName.length >= 2 && trimmedName.length <= 50;
+});
+
+// Computed property to get the correct user name
+const userName = computed(() => {
+  if (user.value?.type === 'google') {
+    return user.value.displayName;
+  } else if (guestUser.value) {
+    return guestUser.value.displayName;
   }
-};
+  return '';
+});
 
-const handleNameLogin = async () => {
+const handleQuickLogin = async () => {
+  nameError.value = false;
+  const trimmedName = nameInput.value.trim();
+  
+  if (!isValidName.value) {
+    nameError.value = true;
+    return;
+  }
+  
   try {
-    nameError.value = '';
-    const trimmedName = name.value.trim();
-    
-    // Basic validation
-    if (!trimmedName) {
-      nameError.value = 'Please enter your name';
-      return;
-    }
-    
-    if (trimmedName.length < 2) {
-      nameError.value = 'Name must be at least 2 characters long';
-      return;
-    }
-
     await signInWithName(trimmedName);
+    // Clear input after successful login
+    nameInput.value = '';
     router.push('/vote');
-  } catch (err) {
-    console.error('Login error:', err);
-    nameError.value = err.message;
-    
-    // Specific error handling
-    if (err.message.includes('already taken')) {
-      nameError.value = 'This name is already in use. Please try another one.';
-    } else {
-      nameError.value = 'Failed to sign in. Please try again.';
-    }
+  } catch (error) {
+    console.error('Quick login error:', error);
+    nameError.value = true;
   }
+};
+
+const handleLoginSuccess = async (response) => {
+  try {
+    await login(response);
+    router.push('/vote');
+  } catch (error) {
+    console.error('Login error:', error);
+  }
+};
+
+const handleLoginError = (error) => {
+  console.error('Login failed:', error);
 };
 
 const handleLogout = async () => {
-  // Prevent multiple clicks
-  if (logoutStatus.value.loading) return;
-  
-  logoutStatus.value = { loading: true, error: null };
   try {
     await logout();
-    // Clear all form data and state
-    name.value = '';
-    nameError.value = '';
-    
-    // Force a page reload to reset all state
-    window.location.href = '/';
+    router.push('/');
+  } catch (error) {
+    console.error('Logout error:', error);
+  }
+};
+
+const showDeleteUsersModal = ref(false);
+const isDeletingUsers = ref(false);
+const isResetting = ref(false);
+
+const isAdmin = computed(() => user.value?.email === 'dprybysh@gmail.com');
+
+// Admin functions
+const confirmReset = async () => {
+  if (confirm('Are you sure you want to reset all votes? This action cannot be undone.')) {
+    try {
+      isResetting.value = true;
+      await resetAllResults();
+      router.push('/leaderboard');
+    } catch (err) {
+      console.error('Error resetting votes:', err);
+    } finally {
+      isResetting.value = false;
+    }
+  }
+};
+
+const deleteAllUsers = async () => {
+  try {
+    isDeletingUsers.value = true;
+    await runTransaction(db, async (transaction) => {
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const guestUsersSnapshot = await getDocs(collection(db, 'guestUsers'));
+      const votesSnapshot = await getDocs(collection(db, 'votes'));
+
+      usersSnapshot.docs.forEach(doc => {
+        transaction.delete(doc.ref);
+      });
+      guestUsersSnapshot.docs.forEach(doc => {
+        transaction.delete(doc.ref);
+      });
+      votesSnapshot.docs.forEach(doc => {
+        transaction.delete(doc.ref);
+      });
+    });
+    showDeleteUsersModal.value = false;
+    router.go(0); // Refresh the page
   } catch (err) {
-    console.error('Logout error:', err);
-    logoutStatus.value.error = 'Failed to logout. Please try again.';
+    console.error('Error deleting users:', err);
   } finally {
-    logoutStatus.value.loading = false;
+    isDeletingUsers.value = false;
   }
 };
 </script>
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-:root {
-  font-family: 'Inter', sans-serif;
+<style scoped>
+.welcome-section {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-.dark {
-  color-scheme: dark;
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-direction: column;
 }
 
-/* Add these new styles for toast animations */
-.translate-y-0 {
-  transform: translateY(0);
+.welcome-text {
+  font-size: 1.25rem;
+  color: #4B5563;
+  margin-bottom: 2rem;
 }
 
-.translate-y-2 {
-  transform: translateY(0.5rem);
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
 }
 
-.opacity-0 {
-  opacity: 0;
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  background-color: #EEF2FF;
+  color: #4F46E5;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-.opacity-100 {
-  opacity: 1;
+.logout-button:hover {
+  background-color: #E0E7FF;
+}
+
+.logout-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.secondary-button {
+  padding: 0.875rem 1.5rem;
+  border-radius: 100px;
+  background: white;
+  color: #4F46E5;
+  border: 2px solid #E0E7FF;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.secondary-button:hover {
+  background: #EEF2FF;
+  border-color: #4F46E5;
+}
+
+.login-section {
+  text-align: center;
+}
+
+.login-text {
+  font-size: 1.1rem;
+  color: #6B7280;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.quick-login-form {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.input-group {
+  width: 100%;
+}
+
+.name-input {
+  padding: 1rem;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s ease;
+  background-color: white;
+  color: #374151;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.name-input::placeholder {
+  color: #9CA3AF;
+}
+
+.name-input:focus {
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.name-input.error {
+  border-color: #EF4444;
+  background-color: #FEF2F2;
+}
+
+.error-message {
+  font-size: 0.875rem;
+  color: #EF4444;
+}
+
+.guest-button {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 100px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background: linear-gradient(90deg, #4CC9F0 0%, #7209B7 100%);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.guest-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.guest-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.quick-login-note {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #6B7280;
+  background-color: #F3F4F6;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.divider {
+  width: 100%;
+  max-width: 400px;
+  margin: 2rem auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: #E5E7EB;
+}
+
+.divider span {
+  color: #6B7280;
+  font-size: 0.875rem;
+  padding: 0 0.5rem;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #4F46E5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.user-info {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background-color: #F3F4F6;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #6B7280;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(90deg, #9CA3AF 0%, #6B7280 100%);
+}
+
+@media (max-width: 640px) {
+  .user-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .name-input {
+    font-size: 16px; /* Prevents zoom on mobile */
+  }
+}
+
+.admin-badge {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  color: #4F46E5;
+  width: 25px;
+  height: 25px;
+  align-items: center;
+  vertical-align: middle;
+  margin-left: 0.5rem;
+  justify-content: center;
+}
+.admin-danger-button svg {
+  width: 20px !important;
+  height: 20px;
+}
+
+.user-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-controls {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0;
+  width: 100%;
+  max-width: 400px;
+  margin: 2rem auto;
+}
+
+.admin-danger-button {
+  padding: 0.875rem 1.5rem;
+  border-radius: 100px;
+  background: #EF4444;
+  color: white;
+  border: none;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.admin-danger-button:hover {
+  background: #EF4444;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 0.75rem;
+  width: 100%;
+  max-width: 400px;
 }
 </style>

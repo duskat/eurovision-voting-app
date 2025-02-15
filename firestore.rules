@@ -8,17 +8,25 @@ service cloud.firestore {
 
     function isAuthenticated() {
       return request.auth != null || 
-             (request.auth == null && 
-              exists(/databases/$(database)/documents/guestUsers/**));
+             (request.resource.data.userType == 'guest' && 
+              request.resource.data.userId.matches('^name_.*'));
     }
 
     function isValidVote() {
       return request.resource.data.votes is list &&
-             request.resource.data.votes.size() == 3;
+             request.resource.data.votes.size() == 3 &&
+             request.resource.data.votes[0].points == 12 &&
+             request.resource.data.votes[1].points == 10 &&
+             request.resource.data.votes[2].points == 8 &&
+             request.resource.data.votes[0].countryId is string &&
+             request.resource.data.votes[1].countryId is string &&
+             request.resource.data.votes[2].countryId is string;
     }
 
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return request.auth != null ? 
+             request.auth.uid == userId : 
+             request.resource.data.userId == userId;
     }
 
     function isGoogleUser() {
@@ -32,44 +40,86 @@ service cloud.firestore {
 
     // Helper function to check if user is admin
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'dprybysh@gmail.com';
+      return request.auth != null && 
+             request.auth.token.email == 'dprybysh@gmail.com' && 
+             request.auth.token.email_verified == true;
+    }
+
+    function isValidPointsUpdate() {
+      return request.resource.data.keys().hasOnly(['totalPoints']) &&
+             request.resource.data.totalPoints is number;
     }
 
     // Results collection
-    match /results/{resultId} {
+    match /results/{countryId} {
       allow read: if true;
-      // Only allow writes from admin
-      allow write: if isAdmin();
+      allow update: if true;
+      allow create: if isAuthenticated();
+      allow delete: if isAdmin();
     }
 
     // Votes collection
     match /votes/{voteId} {
       allow read: if true;
-      // Allow users to create their own votes
-      allow create: if request.auth != null;
-      // Only allow admin to delete votes
-      allow delete: if isAdmin();
+      allow create, update: if 
+        (isAuthenticated() && (
+          (request.auth != null && request.auth.uid == voteId) ||
+          (request.resource.data.userType == 'guest' && 
+           request.resource.data.userId == voteId)
+        )) && 
+        isValidVote();
+      allow delete: if 
+        isAdmin() || 
+        (request.auth != null && request.auth.uid == voteId) ||
+        (resource.data.userType == 'guest' && resource.data.userId == voteId);
     }
 
     // Guest users collection
     match /guestUsers/{userId} {
       allow read: if true;
-      allow create: if request.auth == null;
-      allow update, delete: if false;
+      allow create: if 
+        request.resource.data.displayName is string &&
+        request.resource.data.displayName.size() > 1;
+      allow delete: if isAdmin();
     }
 
     // Users collection
     match /users/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && 
+        (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+    }
+
+    // Add specific rules for Google authentication
+    match /users/{userId}/authData/google {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
     // Allow querying for username availability
     match /{collection=**} {
       allow list: if 
-        // Only allow queries for username checks
         request.query.filters.size() == 1 && 
         'normalizedUsername' in request.query.filters;
+    }
+
+    // Batch operations
+    match /{document=**} {
+      allow read: if true;
+      allow delete: if isAdmin();
+    }
+
+    // Allow Google auth operations
+    match /googleAuth/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    function canDeleteVote(voteId) {
+      return 
+        isAdmin() || 
+        (request.auth != null && request.auth.uid == voteId) ||
+        (resource.data.userType == 'guest' && resource.data.userId == voteId);
     }
   }
 } 

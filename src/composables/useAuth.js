@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { auth, db } from '../firebase/config';
 import {
   GoogleAuthProvider,
@@ -18,12 +18,14 @@ import {
   getDocs,
   limit,
   runTransaction,
+  serverTimestamp,
 } from 'firebase/firestore';
 
+const SESSION_KEY = 'eurovision_session';
 const user = ref(null);
 const guestUser = ref(null);
 const error = ref(null);
-const isLoading = ref(true);
+const isLoading = ref(false);
 let authInitialized = false;
 
 // Initialize auth state listener
@@ -102,122 +104,185 @@ const checkUsernameAvailability = async (username) => {
   }
 };
 
-const signInWithName = async (displayName) => {
-  isLoading.value = true;
-  error.value = null;
-
+const signInWithName = async (name) => {
   try {
-    // Basic validation
-    const trimmedName = displayName.trim();
-    if (!trimmedName || trimmedName.length < 2) {
-      throw new Error('Username must be at least 2 characters long');
-    }
+    isLoading.value = true;
+    error.value = null;
 
-    // Normalize username and create guest data first
-    const guestId = `guest_${Date.now()}`;
-    const normalizedUsername = trimmedName.toLowerCase();
+    const userId = `name_${name}`;
 
-    // Create guest data object
-    const guestData = {
-      uid: guestId,
-      displayName: trimmedName,
-      normalizedUsername,
-      isGuest: true,
-      createdAt: new Date(),
-    };
-
-    // First check if username exists without transaction
-    const [existingUsers, existingGuests] = await Promise.all([
-      getDocs(
-        query(
-          collection(db, 'users'),
-          where('normalizedUsername', '==', normalizedUsername),
-          limit(1)
-        )
-      ),
-      getDocs(
-        query(
-          collection(db, 'guestUsers'),
-          where('normalizedUsername', '==', normalizedUsername),
-          limit(1)
-        )
-      ),
-    ]);
-
-    // Log for debugging
-    console.log('Checking username:', {
-      normalizedUsername,
-      existingUsers: existingUsers.size,
-      existingGuests: existingGuests.size,
+    // Create a guest user document
+    const guestRef = doc(db, 'guestUsers', userId);
+    await setDoc(guestRef, {
+      displayName: name,
+      createdAt: serverTimestamp(),
     });
 
-    if (!existingUsers.empty || !existingGuests.empty) {
-      throw new Error(
-        'This username is already taken. Please choose another one.'
-      );
-    }
+    // Set the guest user in state
+    guestUser.value = {
+      id: userId,
+      displayName: name,
+    };
 
-    // If username is available, create the guest user
-    const guestRef = doc(db, 'guestUsers', guestId);
-    await setDoc(guestRef, guestData);
+    // Store in localStorage
+    localStorage.setItem(
+      'guestUser',
+      JSON.stringify({
+        id: userId,
+        displayName: name,
+      })
+    );
 
-    // Update local state
-    localStorage.setItem('guestUser', JSON.stringify(guestData));
-    user.value = guestData;
-    guestUser.value = guestData;
+    return guestUser.value;
   } catch (err) {
-    console.error('Guest sign in error:', err);
-    error.value = err.message || 'Failed to sign in as guest';
+    console.error('Error signing in with name:', err);
+    error.value = 'Failed to sign in. Please try again.';
     throw err;
   } finally {
     isLoading.value = false;
   }
 };
 
-const signInWithGoogle = async () => {
-  isLoading.value = true;
-  error.value = null;
-  try {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-
-    // Create or update user document
-    await setDoc(doc(db, 'users', result.user.uid), {
-      displayName: result.user.displayName,
-      email: result.user.email,
-      photoURL: result.user.photoURL,
-      lastLogin: new Date(),
-    });
-
-    user.value = result.user;
-  } catch (err) {
-    console.error('Google sign in error:', err);
-    error.value = 'Failed to sign in with Google';
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-// Move logout inside useAuth to access router
 export function useAuth(router) {
+  // Add session persistence
+  const saveSession = (userData) => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        ...userData,
+        timestamp: Date.now(),
+      })
+    );
+  };
+
+  const clearSession = () => {
+    // Clear all auth-related storage
+    sessionStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem('user');
+    localStorage.removeItem('guestUser');
+    localStorage.removeItem('eurovision_votes');
+
+    // Only clear Firebase persistence if we have a Google user
+    if (auth.currentUser) {
+      auth
+        .setPersistence(auth.Auth.Persistence.NONE)
+        .catch((err) => console.error('Error clearing auth persistence:', err));
+    }
+
+    // Reset all reactive refs
+    user.value = null;
+    guestUser.value = null;
+    error.value = null;
+  };
+
+  // Move signInWithGoogle inside useAuth
+  const signInWithGoogle = async () => {
+    try {
+      isLoading.value = true;
+      error.value = null;
+
+      const result = await signInWithPopup(auth, new GoogleAuthProvider());
+      const { user: firebaseUser } = result;
+
+      // Create or update user document
+      const userRef = doc(db, 'users', firebaseUser.uid);
+      await setDoc(
+        userRef,
+        {
+          displayName: firebaseUser.displayName,
+          email: firebaseUser.email,
+          photoURL: firebaseUser.photoURL,
+          lastLogin: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      // Set user state
+      user.value = {
+        uid: firebaseUser.uid,
+        id: firebaseUser.uid,
+        displayName: firebaseUser.displayName,
+        email: firebaseUser.email,
+        picture: firebaseUser.photoURL,
+        type: 'google',
+      };
+
+      return user.value;
+    } catch (err) {
+      console.error('Error signing in with Google:', err);
+      error.value = 'Failed to sign in with Google. Please try again.';
+      throw err;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  // Update login function
+  const login = async (response) => {
+    try {
+      isLoading.value = true;
+      const token = response.credential;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+
+      const userData = {
+        id: payload.sub,
+        displayName: payload.name,
+        name: payload.name,
+        email: payload.email,
+        picture: payload.picture,
+        token,
+        type: 'google',
+      };
+
+      user.value = userData;
+      saveSession(userData);
+      return userData;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  // Update logout function to handle both Google and guest users
   const logout = async () => {
     try {
-      const savedGuestUser = localStorage.getItem('guestUser');
-      if (savedGuestUser) {
-        localStorage.removeItem('guestUser');
-        guestUser.value = null; // Clear guest user
-      } else {
+      isLoading.value = true;
+
+      // Handle Google user logout
+      if (user.value && auth.currentUser) {
         await firebaseSignOut(auth);
       }
-      user.value = null; // Clear user
 
-      if (router) {
-        router.push('/');
+      // Handle guest user logout
+      if (guestUser.value) {
+        localStorage.removeItem('guestUser');
+        guestUser.value = null;
       }
-      return true;
-    } catch (err) {
-      console.error('Sign out error:', err);
-      throw new Error('Failed to sign out');
+
+      // Clear all storage
+      localStorage.removeItem('eurovision_votes');
+      sessionStorage.removeItem(SESSION_KEY);
+
+      // Reset all reactive refs
+      user.value = null;
+      guestUser.value = null;
+      error.value = null;
+
+      // Clear session
+      clearSession();
+
+      // Force page reload to clear any remaining state
+      if (router) {
+        await router.push('/');
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    } finally {
+      isLoading.value = false;
     }
   };
 
@@ -229,6 +294,79 @@ export function useAuth(router) {
     };
   });
 
+  const isLoggedIn = computed(() => !!user.value || !!guestUser.value);
+  const userName = computed(() => {
+    if (user.value?.displayName) return user.value.displayName;
+    if (user.value?.name) return user.value.name;
+    if (guestUser.value?.name) return guestUser.value.name;
+    return '';
+  });
+  const userType = computed(() => {
+    if (user.value) return 'google';
+    if (guestUser.value) return 'guest';
+    return null;
+  });
+
+  const getUserId = computed(() => {
+    if (auth.currentUser) {
+      return auth.currentUser.uid;
+    }
+    if (guestUser.value) {
+      return guestUser.value.id;
+    }
+    return null;
+  });
+
+  // Initialize auth state
+  const initAuth = () => {
+    const session = sessionStorage.getItem(SESSION_KEY);
+    if (session) {
+      try {
+        const userData = JSON.parse(session);
+        // Check session age (expire after 24 hours)
+        const sessionAge = Date.now() - userData.timestamp;
+        if (sessionAge > 24 * 60 * 60 * 1000) {
+          clearSession();
+          return;
+        }
+
+        if (userData.type === 'google') {
+          // Verify Firebase auth state matches
+          if (!auth.currentUser) {
+            clearSession();
+            return;
+          }
+          user.value = {
+            ...userData,
+            displayName: userData.displayName || userData.name,
+          };
+        } else if (userData.type === 'guest') {
+          guestUser.value = userData;
+        }
+      } catch (error) {
+        console.error('Error parsing session:', error);
+        clearSession();
+      }
+    }
+  };
+
+  // Watch for route changes to check auth
+  if (router) {
+    watch(
+      () => router.currentRoute.value,
+      (route) => {
+        // Only protect /vote and /leaderboard routes
+        const protectedRoutes = ['/vote', '/leaderboard'];
+        if (protectedRoutes.includes(route.path) && !isLoggedIn.value) {
+          router.push('/');
+        }
+      }
+    );
+  }
+
+  // Initialize on creation
+  initAuth();
+
   return {
     user,
     guestUser,
@@ -237,6 +375,12 @@ export function useAuth(router) {
     signInWithGoogle,
     signInWithName,
     logout,
-    initializeAuth, // Export this so we can use it in router
+    initializeAuth,
+    isLoggedIn,
+    userName,
+    userType,
+    login,
+    initAuth,
+    getUserId,
   };
 }

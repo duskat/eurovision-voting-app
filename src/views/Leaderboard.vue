@@ -1,239 +1,202 @@
 <template>
-  <div class="min-h-screen bg-gray-100 p-8">
-    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
-      <h1 class="text-3xl font-bold mb-6 text-center">Eurovision Leaderboard</h1>
+  <div class="page-container">
+    <div class="content-container">
+      <div class="min-h-screen bg-gray-100 p-8">
+        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
+          <h1 class="text-3xl font-bold mb-6 text-center">Eurovision Leaderboard</h1>
 
-      <!-- Loading state -->
-      <div v-if="isLoading" class="text-center py-8">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p class="text-gray-600">Loading leaderboard...</p>
-      </div>
-
-      <!-- Error state -->
-      <div v-else-if="error" class="text-center py-8">
-        <p class="text-red-500">{{ error }}</p>
-        <button 
-          @click="loadResults" 
-          class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Retry
-        </button>
-      </div>
-
-      <!-- Results -->
-      <div v-else>
-        <!-- Total Votes Counter -->
-        <div class="mb-6 space-y-4">
-          <div class="text-center">
-            <p class="text-gray-600">
-              Total Votes Cast: <span class="font-bold">{{ totalVotes }}</span>
-            </p>
+          <!-- Loading state -->
+          <div v-if="isLoading" class="text-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading leaderboard...</p>
           </div>
 
-          <!-- Voters List with Clickable Names -->
-          <div v-if="voters.length > 0" class="mt-8">
-            <h3 class="text-lg font-semibold mb-3">Voters:</h3>
-            <div class="space-y-2">
-              <button
-                v-for="voter in voters"
-                :key="voter.id"
-                @click="showVoterDetails(voter)"
-                class="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-              >
-                {{ voter.displayName }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Leaderboard Table -->
-        <div class="overflow-hidden rounded-lg border border-gray-200">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Rank
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Country
-                </th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Points
-                </th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr 
-                v-for="(country, index) in sortedResults" 
-                :key="country.name"
-                :class="{
-                  'bg-yellow-50': index === 0,
-                  'bg-gray-50': index === 1,
-                  'bg-orange-50': index === 2
-                }"
-                class="hover:bg-gray-50 transition-colors"
-              >
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <span 
-                      class="w-8 h-8 flex items-center justify-center rounded-full font-bold"
-                      :class="{
-                        'bg-yellow-500 text-white': index === 0,
-                        'bg-gray-400 text-white': index === 1,
-                        'bg-orange-500 text-white': index === 2,
-                        'bg-blue-100 text-blue-800': index > 2
-                      }"
-                    >
-                      {{ index + 1 }}
-                    </span>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center space-x-2">
-                    <span class="text-xl" role="img" aria-label="country flag">
-                      {{ getCountryFlag(country.name) }}
-                    </span>
-                    <span class="text-sm font-medium text-gray-900">
-                      {{ country.name }}
-                    </span>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right">
-                  <div class="text-sm font-bold">
-                    {{ country.totalPoints }} points
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- No Results Message -->
-        <div v-if="sortedResults.length === 0" class="text-center py-8">
-          <p class="text-gray-600">No results available yet</p>
-        </div>
-
-        <!-- Navigation -->
-        <div class="mt-8 flex justify-between items-center">
-          <router-link
-            to="/"
-            class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition"
-          >
-            Back to Home
-          </router-link>
-          <router-link
-            to="/vote"
-            class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
-          >
-            Cast Your Vote
-          </router-link>
-        </div>
-
-        <!-- Reset Button (only show for admin) -->
-        <div v-if="isGoogleUser" class="mt-4 text-center">
-          <button
-            @click="handleReset"
-            class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition flex items-center justify-center gap-2 mx-auto"
-            :disabled="isResetting"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-            </svg>
-            <span v-if="isResetting" class="flex items-center">
-              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Resetting...
-            </span>
-            <span v-else>Admin Reset</span>
-          </button>
-        </div>
-
-        <!-- Reset Confirmation Modal -->
-        <div v-if="showResetModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div class="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 class="text-xl font-bold mb-4">Confirm Reset</h3>
-            <div class="text-gray-600 mb-6">
-              <p class="mb-2">Are you sure you want to reset all points?</p>
-              <p class="mb-2">This will:</p>
-              <ul class="list-disc ml-6 mt-2">
-                <li>Set all country points to zero</li>
-                <li>Delete all existing votes</li>
-                <li>This action cannot be undone</li>
-              </ul>
-            </div>
-            <div class="flex justify-end space-x-4">
-              <button
-                @click="showResetModal = false"
-                class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-              <button
-                @click="confirmReset"
-                class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                :disabled="isResetting"
-              >
-                {{ isResetting ? 'Resetting...' : 'Yes, Reset All' }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Reset Result Message -->
-        <div v-if="resetMessage" 
-          :class="[
-            'fixed bottom-4 right-4 p-4 rounded-lg shadow-lg transition-opacity duration-500',
-            resetError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-          ]"
-        >
-          {{ resetMessage }}
-        </div>
-      </div>
-
-      <!-- Voter Details Modal -->
-      <div
-        v-if="selectedVoter"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-        @click="closeModal"
-      >
-        <div
-          class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full"
-          @click.stop
-        >
-          <!-- Modal Header -->
-          <div class="flex justify-between items-center mb-6 pb-3 border-b">
-            <h3 class="text-xl font-semibold text-gray-800">
-              {{ selectedVoter.userDisplayName }}'s Votes
-            </h3>
+          <!-- Error state -->
+          <div v-else-if="error" class="text-center py-8">
+            <p class="text-red-500">{{ error }}</p>
             <button 
-              @click="closeModal" 
-              class="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors"
-              title="Close details"
+              @click="loadResults" 
+              class="primary-button"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              <span>Close</span>
+              Retry
             </button>
           </div>
 
-          <div class="space-y-4">
-            <div
-              v-for="vote in selectedVoter.votes"
-              :key="vote.countryId"
-              class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
-            >
-              <span class="font-medium">{{ vote.countryName }}</span>
-              <span class="text-sm font-semibold px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
-                {{ vote.points }} points
-              </span>
+          <!-- Results -->
+          <div v-else>
+            <!-- Total Votes Counter -->
+            <div class="mb-6 space-y-4">
+              <div class="text-left">
+                <p class="text-gray-600">
+                  Total Votes Cast: <span class="font-bold text-lg">{{ totalVotes }}</span>
+                </p>
+              </div>
+
+              <!-- Voters List -->
+              <div v-if="voters.length > 0" class="voters-section">
+                <h3 class="voters-title text-xl mb-4">Voters</h3>
+                <div class="voters-list">
+                  <div
+                    v-for="voter in voters"
+                    :key="voter.id"
+                    class="voter-card hover:bg-gray-50"
+                  >
+                    <button 
+                      @click="toggleVoterDetails(voter)"
+                      class="voter-button py-4"
+                    >
+                      <div class="voter-button-content">
+                        <span class="voter-name text-lg">{{ voter.displayName }}</span>
+                        <svg 
+                          class="w-[25px] h-[25px] text-gray-400 transition-transform duration-200"
+                          :class="{ 'transform rotate-90': selectedVoterId === voter.id }"
+                          xmlns="http://www.w3.org/2000/svg" 
+                          viewBox="0 0 20 20" 
+                          fill="currentColor"
+                        >
+                          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                      </div>
+                    </button>
+                    
+                    <!-- Voter Details -->
+                    <div 
+                      v-if="selectedVoterId === voter.id"
+                      class="voter-details bg-gray-50 border-t border-gray-200"
+                    >
+                      <div 
+                        v-for="vote in voter.votes" 
+                        :key="vote.countryId"
+                        class="vote-item hover:bg-white"
+                      >
+                        <div class="country-info">
+                          <span class="country-flag text-xl" role="img">
+                            {{ getCountryFlag(vote.countryId) }}
+                          </span>
+                          <span class="country-name font-medium">{{ vote.countryId }}</span>
+                        </div>
+                        <span class="points-badge bg-blue-50 text-blue-600">
+                          {{ vote.points }} points
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Leaderboard Table -->
+            <div class="overflow-hidden rounded-lg border border-gray-200">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Rank
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Country
+                    </th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Points
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr 
+                    v-for="(country, index) in sortedResults" 
+                    :key="country.name"
+                    :class="{
+                      'bg-yellow-50': index === 0,
+                      'bg-gray-50': index === 1,
+                      'bg-orange-50': index === 2
+                    }"
+                    class="hover:bg-gray-50 transition-colors"
+                  >
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <span 
+                          class="w-8 h-8 flex items-center justify-center rounded-full font-bold"
+                          :class="{
+                            'bg-yellow-500 text-white': index === 0,
+                            'bg-gray-400 text-white': index === 1,
+                            'bg-orange-500 text-white': index === 2,
+                            'bg-blue-100 text-blue-800': index > 2
+                          }"
+                        >
+                          {{ index + 1 }}
+                        </span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center space-x-2">
+                        <span class="text-xl" role="img" aria-label="country flag">
+                          {{ getCountryFlag(country.name) }}
+                        </span>
+                        <span class="text-sm font-medium text-gray-900">
+                          {{ country.name }}
+                        </span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                      <div class="text-sm font-bold">
+                        {{ country.totalPoints }} points
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- No Results Message -->
+            <div v-if="sortedResults.length === 0" class="text-center py-8">
+              <p class="text-gray-600">No results available yet</p>
             </div>
           </div>
 
-          <div class="mt-4 text-sm text-gray-500">
-            Voted: {{ formatVoteTime(selectedVoter.timestamp) }}
+          <!-- Voter Details Modal -->
+          <div
+            v-if="selectedVoter"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            @click="closeModal"
+          >
+            <div
+              class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full"
+              @click.stop
+            >
+              <!-- Modal Header -->
+              <div class="flex justify-between items-center mb-6 pb-3 border-b">
+                <h3 class="text-xl font-semibold text-gray-800">
+                  {{ selectedVoter.userDisplayName }}'s Votes
+                </h3>
+                <button 
+                  @click="closeModal" 
+                  class="primary-button"
+                  title="Close details"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span>Close</span>
+                </button>
+              </div>
+
+              <div class="space-y-4">
+                <div
+                  v-for="vote in selectedVoter.votes"
+                  :key="vote.countryId"
+                  class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                >
+                  <span class="font-medium">{{ vote.countryName }}</span>
+                  <span class="text-sm font-semibold px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                    {{ vote.points }} points
+                  </span>
+                </div>
+              </div>
+
+              <div class="mt-4 text-sm text-gray-500">
+                Voted: {{ formatVoteTime(selectedVoter.timestamp) }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -244,10 +207,12 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { db } from '../firebase/config';
-import { collection, onSnapshot, query, orderBy, getDocs, where, doc, getDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, getDocs, where, doc, getDoc, Timestamp } from 'firebase/firestore';
 import { useVoting } from '../composables/useVoting';
 import { useAuth } from '../composables/useAuth';
 import { getCountryFlag } from '../utils/countryFlags';
+import { useRouter } from 'vue-router';
+import { runTransaction } from 'firebase/firestore';
 
 defineOptions({
   name: 'Leaderboard'
@@ -266,10 +231,19 @@ const selectedVoter = ref(null);
 
 const { user } = useAuth();
 const { resetAllResults } = useVoting();
+const router = useRouter();
+
+const showDeleteUsersModal = ref(false);
+const isDeletingUsers = ref(false);
 const isResetting = ref(false);
 const showResetModal = ref(false);
 
 const voters = ref([]);
+
+const isGoogleUser = computed(() => user.value?.type === 'google');
+const isAdmin = computed(() => user.value?.email === 'dprybysh@gmail.com');
+
+const selectedVoterId = ref(null);
 
 // Sort results by points in descending order, then alphabetically
 const sortedResults = computed(() => {
@@ -284,44 +258,48 @@ const sortedResults = computed(() => {
 });
 
 // Calculate total votes (each vote contributes 30 points: 12 + 10 + 8)
-const totalVotes = computed(() => {
-  const totalPoints = results.value.reduce((sum, country) => sum + country.totalPoints, 0);
-  return Math.round(totalPoints / 30);
-});
+const totalVotes = ref(0);
 
-const isGoogleUser = computed(() => {
-  const userEmail = user.value?.email;
-  return userEmail === 'dprybysh@gmail.com';
-});
-
-const loadResults = () => {
-  isLoading.value = true;
-  error.value = null;
-  
+const loadResults = async () => {
   try {
-    const resultsQuery = query(
-      collection(db, 'results'),
-      orderBy('totalPoints', 'desc')
-    );
+    isLoading.value = true;
+    error.value = null;
+    
+    // Set up real-time listener for votes
+    const votesQuery = query(collection(db, 'votes'));
+    const unsubscribeVotes = onSnapshot(votesQuery, async (votesSnapshot) => {
+      // Recalculate points for each country
+      const pointsMap = new Map();
+      
+      // Process all votes
+      votesSnapshot.docs.forEach(voteDoc => {
+        const voteData = voteDoc.data();
+        voteData.votes.forEach(vote => {
+          const currentPoints = pointsMap.get(vote.countryId) || 0;
+          pointsMap.set(vote.countryId, currentPoints + vote.points);
+        });
+      });
+      
+      // Update results with new point totals
+      const resultsQuery = query(collection(db, 'results'));
+      const resultsSnapshot = await getDocs(resultsQuery);
+      
+      results.value = resultsSnapshot.docs.map(doc => ({
+        name: doc.id,
+        totalPoints: pointsMap.get(doc.id) || 0
+      }));
+      
+      isLoading.value = false;
+    }, (err) => {
+      console.error('Error in vote updates:', err);
+      error.value = 'Failed to get vote updates';
+      isLoading.value = false;
+    });
 
-    unsubscribeResults.value = onSnapshot(
-      resultsQuery,
-      (snapshot) => {
-        results.value = snapshot.docs.map(doc => ({
-          name: doc.id,
-          totalPoints: doc.data().totalPoints || 0
-        }));
-        isLoading.value = false;
-      },
-      (err) => {
-        console.error('Error loading results:', err);
-        error.value = 'Failed to load leaderboard. Please try again.';
-        isLoading.value = false;
-      }
-    );
   } catch (err) {
-    console.error('Error setting up listener:', err);
-    error.value = 'Failed to connect to leaderboard. Please try again.';
+    console.error('Error loading results:', err);
+    error.value = 'Failed to load leaderboard';
+  } finally {
     isLoading.value = false;
   }
 };
@@ -330,46 +308,76 @@ const handleReset = () => {
   showResetModal.value = true;
 };
 
-const confirmReset = async () => {
-  isResetting.value = true;
-  resetError.value = false;
-  resetMessage.value = '';
-  
-  try {
-    await resetAllResults();
-    showResetModal.value = false;
-    resetMessage.value = 'All points have been reset successfully';
-    resetError.value = false;
-  } catch (error) {
-    console.error('Error resetting points:', error);
-    resetMessage.value = 'Failed to reset points. Please try again.';
-    resetError.value = true;
-  } finally {
-    isResetting.value = false;
-    
-    // Clear the message after 5 seconds
-    if (resetMessageTimeout.value) clearTimeout(resetMessageTimeout.value);
-    resetMessageTimeout.value = setTimeout(() => {
-      resetMessage.value = '';
-    }, 5000);
-  }
-};
-
-// Format timestamp
 const formatVoteTime = (timestamp) => {
   if (!timestamp) return '';
-  const date = timestamp.toDate();
+  
+  let date;
+  if (timestamp instanceof Timestamp) {
+    date = timestamp.toDate();
+  } else if (typeof timestamp === 'number') {
+    date = new Date(timestamp);
+  } else if (timestamp.seconds) {
+    // Handle Firestore timestamp object
+    date = new Date(timestamp.seconds * 1000);
+  } else {
+    return 'Invalid date';
+  }
+
   return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    dateStyle: 'medium',
+    timeStyle: 'short'
   }).format(date);
 };
 
-// Show voter details
-const showVoterDetails = (voter) => {
-  selectedVoter.value = voter;
+// Add getUserVoteHistory function
+const getUserVoteHistory = async (voter) => {
+  try {
+    // Get the vote document
+    const voteRef = doc(db, 'votes', voter.id);
+    const voteDoc = await getDoc(voteRef);
+    
+    if (!voteDoc.exists()) {
+      return null;
+    }
+
+    const voteData = voteDoc.data();
+    
+    // Map the votes to include country names
+    const votesWithNames = voteData.votes.map(vote => ({
+      countryId: vote.countryId,
+      countryName: vote.countryId, // Since countryId is the country name
+      points: vote.points
+    }));
+
+    return {
+      userDisplayName: voter.displayName,
+      timestamp: voteData.timestamp,
+      votes: votesWithNames
+    };
+  } catch (err) {
+    console.error('Error fetching vote history:', err);
+    throw new Error('Failed to fetch vote history');
+  }
+};
+
+// Update showVoterDetails to use voter object directly
+const showVoterDetails = async (voter) => {
+  try {
+    const voteHistory = await getUserVoteHistory(voter);
+    if (voteHistory) {
+      selectedVoter.value = {
+        ...voteHistory,
+        votes: voteHistory.votes.sort((a, b) => b.points - a.points)
+      };
+    } else {
+      selectedVoter.value = null;
+      error.value = 'No voting history found for this user';
+    }
+  } catch (err) {
+    console.error('Error fetching voter details:', err);
+    error.value = 'Failed to load voter details';
+    selectedVoter.value = null;
+  }
 };
 
 // Close modal
@@ -380,64 +388,123 @@ const closeModal = () => {
 // Load votes and voters
 const loadVoters = async () => {
   try {
-    const processedUsers = new Set();
     const votersList = [];
-
+    const uniqueVoters = new Map(); // Track unique voters by userId
+    
     const votesSnapshot = await getDocs(collection(db, 'votes'));
     
-    await Promise.all(votesSnapshot.docs.map(async (voteDoc) => {
+    for (const voteDoc of votesSnapshot.docs) {
       const voteData = voteDoc.data();
       const userId = voteData.userId;
 
-      // Skip if no userId or already processed
-      if (!userId || processedUsers.has(userId)) return;
-      processedUsers.add(userId);
+      if (!userId) continue;
 
       try {
         let voterName = '';
         let isGuest = false;
 
-        // Check if it's a guest user ID
-        if (userId && userId.startsWith('guest_')) {
+        if (userId.startsWith('name_')) {
+          voterName = userId.replace('name_', '');
+          isGuest = true;
+        } else if (voteData.userType === 'google') {
+          const userRef = doc(db, 'users', userId);
+          const userDoc = await getDoc(userRef);
+          if (userDoc.exists()) {
+            voterName = userDoc.data().displayName;
+            isGuest = false;
+          } else {
+            console.error('Google user document not found:', userId);
+          }
+        } else {
           const guestRef = doc(db, 'guestUsers', userId);
           const guestDoc = await getDoc(guestRef);
           if (guestDoc.exists()) {
             voterName = guestDoc.data().displayName;
             isGuest = true;
           }
-        } else if (userId) { // Regular user
-          const userRef = doc(db, 'users', userId);
-          const userDoc = await getDoc(userRef);
-          if (userDoc.exists()) {
-            voterName = userDoc.data().displayName;
-          }
         }
 
         if (voterName) {
-          votersList.push({
+          const voterData = {
             id: voteDoc.id,
             displayName: voterName,
-            userDisplayName: voterName, // Add this for modal display
             isGuest,
             timestamp: voteData.timestamp,
-            votes: voteData.votes, // Include the votes data
-            userId: userId // Include userId for reference
-          });
+            votes: voteData.votes,
+            userId: userId
+          };
+          
+          // Only keep the most recent vote for each user
+          const existingVoter = uniqueVoters.get(userId);
+          if (!existingVoter || 
+              (existingVoter.timestamp && 
+               voterData.timestamp && 
+               voterData.timestamp.seconds > existingVoter.timestamp.seconds)) {
+            uniqueVoters.set(userId, voterData);
+          }
         }
       } catch (err) {
         console.error(`Error fetching user ${userId}:`, err);
       }
-    }));
+    }
+
+    // Convert unique voters map to array
+    votersList.push(...uniqueVoters.values());
 
     // Sort voters by timestamp, most recent first
     voters.value = votersList.sort((a, b) => {
       if (!a.timestamp || !b.timestamp) return 0;
       return b.timestamp.seconds - a.timestamp.seconds;
     });
+
+    // Update total votes count
+    totalVotes.value = uniqueVoters.size;
   } catch (err) {
     console.error('Error loading voters:', err);
     error.value = 'Failed to load voters list';
   }
+};
+
+const deleteAllUsers = async () => {
+  try {
+    isDeletingUsers.value = true;
+    
+    // Delete all users and their votes
+    await runTransaction(db, async (transaction) => {
+      // Get all users
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const guestUsersSnapshot = await getDocs(collection(db, 'guestUsers'));
+      const votesSnapshot = await getDocs(collection(db, 'votes'));
+
+      // Delete all users
+      usersSnapshot.docs.forEach(doc => {
+        transaction.delete(doc.ref);
+      });
+
+      // Delete all guest users
+      guestUsersSnapshot.docs.forEach(doc => {
+        transaction.delete(doc.ref);
+      });
+
+      // Delete all votes
+      votesSnapshot.docs.forEach(doc => {
+        transaction.delete(doc.ref);
+      });
+    });
+
+    showDeleteUsersModal.value = false;
+    // Show success message or redirect
+    router.push('/');
+  } catch (err) {
+    console.error('Error deleting users:', err);
+    error.value = 'Failed to delete users';
+  } finally {
+    isDeletingUsers.value = false;
+  }
+};
+
+const toggleVoterDetails = (voter) => {
+  selectedVoterId.value = selectedVoterId.value === voter.id ? null : voter.id;
 };
 
 onMounted(() => {
@@ -446,7 +513,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  // Cleanup listeners
   if (typeof unsubscribeResults.value === 'function') {
     unsubscribeResults.value();
   }
@@ -457,4 +523,151 @@ onUnmounted(() => {
     clearTimeout(resetMessageTimeout.value);
   }
 });
-</script> 
+</script>
+
+<style scoped>
+.admin-danger-button {
+  background-color: #ef4444;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  width: 100%;
+  max-width: 300px;
+  margin: 20px 0;
+}
+
+.admin-danger-button:hover {
+  background-color: #dc2626;
+  transform: translateY(-1px);
+}
+
+.admin-danger-button:disabled {
+  background-color: #fca5a5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.error-message {
+  color: #ef4444;
+  background-color: #fee2e2;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.voters-section {
+  margin: 2rem 0;
+  padding: 1rem;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.voters-title {
+  font-weight: 600;
+  color: var(--color-gray-700);
+  padding-left: 1rem;
+}
+
+.voters-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.voter-button-content svg {
+  margin-right: 0.5rem;
+  width: 25px;
+}
+
+.voter-card {
+  background: white;
+  border-bottom: 1px solid var(--color-gray-200);
+  transition: all 0.3s ease;
+}
+
+.voter-button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--color-gray-700);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.voter-button-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.voter-name {
+  font-size: 1rem;
+  color: var(--color-gray-700);
+}
+
+.voter-button:hover {
+  background: var(--color-gray-100);
+}
+
+.voter-details {
+  border-top: 1px solid var(--color-gray-200);
+  padding: 0.75rem;
+  background: var(--color-gray-50);
+}
+
+.vote-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: transparent;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.vote-item:last-child {
+  margin-bottom: 0;
+}
+
+.country-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.country-flag {
+  font-size: 1.25rem;
+}
+
+.country-name {
+  font-size: 0.875rem;
+  color: var(--color-gray-700);
+}
+
+.points-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+@media (max-width: 640px) {
+  .voters-list {
+    width: 100%;
+  }
+}
+</style> 
