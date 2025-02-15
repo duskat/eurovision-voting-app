@@ -71,7 +71,6 @@
 
       <!-- Login State -->
       <div v-else class="login-section">
-        <h2 class="page-title">Eurovision Voting App</h2>
         <p class="login-text">Please log in to continue</p>
         
         <!-- Quick Login Form -->
@@ -354,75 +353,6 @@ const deleteAllUsers = async () => {
   color: #6B7280;
   margin-bottom: 2rem;
   text-align: center;
-}
-
-.quick-login-form {
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.input-group {
-  width: 100%;
-}
-
-.name-input {
-  padding: 1rem;
-  border: 1px solid #E5E7EB;
-  border-radius: 12px;
-  font-size: 1rem;
-  outline: none;
-  transition: all 0.2s ease;
-  background-color: white;
-  color: #374151;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.name-input::placeholder {
-  color: #9CA3AF;
-}
-
-.name-input:focus {
-  border-color: #4F46E5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-}
-
-.name-input.error {
-  border-color: #EF4444;
-  background-color: #FEF2F2;
-}
-
-.error-message {
-  font-size: 0.875rem;
-  color: #EF4444;
-}
-
-.guest-button {
-  width: 100%;
-  padding: 1rem;
-  border: none;
-  border-radius: 100px;
-  font-size: 1rem;
-  font-weight: 500;
-  color: white;
-  background: linear-gradient(90deg, #4CC9F0 0%, #7209B7 100%);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.guest-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.guest-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
 }
 
 .quick-login-note {

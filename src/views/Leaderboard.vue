@@ -86,7 +86,7 @@
             </div>
 
             <!-- Leaderboard Table -->
-            <div class="overflow-hidden rounded-lg border border-gray-200">
+            <div class="overflow-hidden rounded-lg border border-gray-200 flex-column">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
@@ -583,6 +583,12 @@ onUnmounted(() => {
   width: 25px;
 }
 
+.flex-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .voter-card {
   background: white;
   border-bottom: 1px solid var(--color-gray-200);
@@ -590,7 +596,7 @@ onUnmounted(() => {
 }
 
 .voter-button {
-  width: 100%;
+  width: -webkit-fill-available;
   display: flex;
   justify-content: space-between;
   align-items: center;

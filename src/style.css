@@ -14,12 +14,20 @@ body {
 
 * {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
 }
 
 /* For better button interaction */
 button {
+  all: unset;
+  /* Убирает все стили браузера */
+  display: inline-block;
+  /* Возвращает элемент к блочному поведению */
   cursor: pointer;
-  outline: none;
+  /* Добавляет указатель при наведении */
+  text-align: center;
+  /* Выравнивает текст */
+
 }
 
 button:active {
