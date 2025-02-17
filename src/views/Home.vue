@@ -331,3 +331,7 @@ const deleteAllUsers = async () => {
   }
 };
 </script>
+
+<style scoped>
+/* Remove .content-container styles */
+</style>

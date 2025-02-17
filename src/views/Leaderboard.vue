@@ -700,24 +700,6 @@ svg {
 }
 
 @media (max-width: 768px) {
-  .content-container {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 0 var(--spacing-4);
-    box-sizing: border-box;
-    overflow: hidden;
-  }
-
-  .results-wrapper {
-    width: 100%;
-    margin: 0 auto;
-    box-sizing: border-box;
-    overflow: hidden;
-    padding: 0;
-  }
 
   .leaderboard-grid {
     display: flex;
@@ -954,11 +936,6 @@ svg {
   }
 }
 
-.content-container {
-  position: relative; /* Add this to keep content above the light effect */
-  z-index: 1;        /* Ensure content stays above the animated background */
-}
-
 /* Results Header */
 .results-header {
   width: 100%;
@@ -1006,15 +983,6 @@ svg {
 .view-voters-link:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
-}
-
-/* Add wrapper class for results */
-.results-wrapper {
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  box-sizing: border-box;
-  overflow: hidden;
 }
 
 /* Hover effect for rows */

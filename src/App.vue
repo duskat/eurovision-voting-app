@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div class="app-wrapper">
     <nav>
       <router-link to="/">Home</router-link>
       <router-link to="/vote">Vote</router-link>
@@ -79,10 +79,11 @@ const handleLogout = async () => {
 </script>
 
 <style>
-#app {
-  width: 100%;
+.app-wrapper {
+  background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
+  position: relative;
   min-height: 100vh;
-  font-family: Arial, sans-serif;
+  overflow: hidden;
 }
 
 nav {

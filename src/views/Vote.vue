@@ -15,96 +15,55 @@
         <button @click="loadCountries" class="primary-button">Try Again</button>
       </div>
 
-      <div v-else class="form-container">
-        <!-- Vote Submitted Message -->
-        <div v-if="voteSubmitted" class="success-message">
-          <h2 class="text-xl font-semibold text-green-800 mb-4">
-            {{ selectedCountries.some(c => c) ? 'Your votes have been updated!' : 'Your vote has been submitted!' }}
-          </h2>
-          <div class="submitted-votes">
-            <div v-for="(country, index) in selectedCountries" :key="country?.id" class="vote-item">
-              <span class="points">{{ [12, 10, 8][index] }} points:</span>
-              <span class="country">{{ country?.name }}</span>
-            </div>
-          </div>
-          <div class="action-buttons">
-            <button @click="router.push('/leaderboard')" class="view-results-button">
-              View Results
-            </button>
-            <button 
-              v-if="canUpdateVote" 
-              @click="startNewVote" 
-              class="update-vote-button"
-            >
-              Update Vote
-            </button>
-          </div>
-        </div>
-
-        <!-- Voting Section -->
-        <div v-else class="voting-section">
-          <h2 class="section-title">Your Votes</h2>
-          
-          <!-- Vote Slots -->
-          <div class="votes-container">
-            <div v-for="(points, index) in [12, 10, 8]" :key="points" class="vote-select-container">
-              <div class="points-label">{{ points }} points</div>
-              <div class="custom-select" :data-active="activeDropdown === index">
-                <button 
-                  @click="toggleDropdown(index)"
-                  class="select-button"
-                  :class="{ 'active': activeDropdown === index }"
-                  :data-dropdown-index="index"
-                >
-                  <span v-if="selectedCountries[index]">
-                    <span class="country-flag">{{ getCountryFlag(selectedCountries[index].name) }}</span>
-                    {{ selectedCountries[index].name }}
-                  </span>
-                  <span v-else>Select a country</span>
-                  <svg 
-                    class="dropdown-arrow"
-                    :class="{ 'rotated': activeDropdown === index }"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
+      <div v-else class="results-wrapper">
+        <h2 class="section-title">Your Votes</h2>
+        
+        <div class="vote-grid">
+          <div v-for="(points, index) in [12, 10, 8]" :key="points" class="vote-row">
+            <div class="points-box">{{ points }}</div>
+            <div class="custom-select">
+              <button 
+                @click="toggleDropdown(index)"
+                class="select-button"
+                :class="{ 'active': activeDropdown === index }"
+              >
+                <span v-if="selectedCountries[index]">
+                  <span class="country-flag">{{ getCountryFlag(selectedCountries[index].name) }}</span>
+                  {{ selectedCountries[index].name }}
+                </span>
+                <span v-else>Select a country</span>
+                <svg class="dropdown-arrow" :class="{ 'rotated': activeDropdown === index }">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              <div v-if="activeDropdown === index" class="dropdown-menu">
+                <div class="dropdown-backdrop" @click="activeDropdown = null"></div>
+                <div class="dropdown-content">
+                  <button
+                    v-for="country in availableCountries(index)"
+                    :key="country.id"
+                    @click="selectCountry(index, country)"
+                    class="country-option"
+                    :class="{ 'selected': selectedCountries[index]?.id === country.id }"
                   >
-                    <path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-
-                <div v-if="activeDropdown === index">
-                  <div class="dropdown-backdrop" @click="activeDropdown = null"></div>
-                  <div class="dropdown-menu" :class="{ 'dropdown-down': getDropdownPosition(index) === 'down' }">
-                    <div class="dropdown-content">
-                      <button
-                        v-for="country in availableCountries(index)"
-                        :key="country.id"
-                        @click="selectCountry(index, country)"
-                        class="country-option"
-                        :class="{ 'selected': selectedCountries[index]?.id === country.id }"
-                      >
-                        <span class="country-flag" role="img" aria-label="country flag">
-                          {{ getCountryFlag(country.name) }}
-                        </span>
-                        {{ country.name }}
-                      </button>
-                    </div>
-                  </div>
+                    <span class="country-flag">{{ getCountryFlag(country.name) }}</span>
+                    {{ country.name }}
+                  </button>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Submit Button -->
-          <div class="button-container">
-            <button
-              @click="submitVotes"
-              :disabled="!isValid"
-              class="primary-button"
-            >
-              Submit Vote
-            </button>
-          </div>
+        <!-- Submit Button -->
+        <div class="button-container">
+          <button
+            @click="submitVotes"
+            :disabled="!isValid"
+            class="submit-vote-button"
+          >
+            Submit Vote
+          </button>
         </div>
       </div>
     </div>
@@ -278,385 +237,49 @@ const startNewVote = async () => {
 </script>
 
 <style scoped>
-/* Container styles */
-.votes-container {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-}
-
-.vote-select-container {
-  position: relative;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.25rem;
-  background: #f8fafc;
-  border-radius: 1rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  box-sizing: border-box;
-}
-
-/* Points label */
-.points-label {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-primary-light);
-  min-width: 100px;
-  text-align: right;
-  padding-right: 1rem;
-  border-right: 2px solid var(--color-gray-200);
-}
-
-/* Select container */
-.custom-select {
-  position: relative;
-  width: 100%;
-  background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Select button */
-.select-button {
-  width: 100%;
-  padding: 1rem 1.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
+/* Keep only component-specific styles */
+.section-title {
   color: white;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(5px);
-}
-
-.select-button:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* Dropdown menu */
-.dropdown-menu {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  left: 0;
-  width: 100%;
-  z-index: 50;
-  background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  max-height: 300px;
-  overflow-y: auto;
-  backdrop-filter: blur(5px);
-}
-
-.dropdown-content {
-  max-height: 400px;
-  overflow-y: auto;
-  padding: 0.5rem;
-  box-sizing: border-box;
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-}
-
-/* Country options */
-.country-option {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: none;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.country-option:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.country-option.selected {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-}
-
-.country-flag {
   font-size: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 35px;
-}
-
-.dropdown-arrow {
-  width: 20px;
-  height: 20px;
-  color: white;
-  transition: transform 0.2s ease;
-}
-
-.dropdown-arrow.rotated {
-  transform: rotate(180deg);
-}
-
-.points-label {
-  font-size: 1.125rem;
-  color: white;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 2rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-/* Mobile styles */
-@media (max-width: 768px) {
-  .vote-select-container {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1rem;
-    gap: 0.5rem;
-  }
-
-  .points-label {
-    width: 100%;
-    text-align: left;
-    padding-right: 0;
-    border-right: none;
-    border-bottom: 2px solid var(--color-gray-200);
-    padding-bottom: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .dropdown-menu {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    top: auto;
-    margin: 0;
-    border-radius: 16px 16px 0 0;
-    padding: 16px;
-    max-height: 80vh;
-    width: 90%;
-  }
-
-  .dropdown-content {
-    max-height: 70vh;
-    padding: 8px 0;
-  }
-
-  .dropdown-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 999;
-    backdrop-filter: blur(2px);
-  }
-
-  /* Animate dropdown on mobile */
-  .dropdown-menu {
-    transform: translateY(100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .dropdown-menu.active {
-    transform: translateY(0);
-  }
-
-  /* Prevent body scroll when dropdown is open */
-  body.dropdown-open {
-    overflow: hidden;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--spacing-4);
-    padding: 0 var(--spacing-4);
-  }
-  
-  .view-results-button,
-  .update-vote-button {
-    width: 100%;
-    text-align: center;
-  }
-
-  .country-option {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.9rem;
-  }
-
-  .country-flag {
-    font-size: 1.25rem;
-    width: 30px;
-  }
-}
-
-/* Success message container */
-.success-message {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 2rem;
-  border-radius: 1rem;
-  text-align: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-/* Add styles for submitted votes display */
-.submitted-votes {
-  margin-top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.vote-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  background: white;
-  border-radius: 0.75rem;
-}
-
-.points {
-  font-weight: 600;
-  color: #059669;
-}
-
-.country {
-  color: #1F2937;
-  font-weight: 500;
-}
-
-/* When dropdown is active, increase z-index */
-.custom-select:has(.dropdown-menu[style*="display: block"]),
-.custom-select:focus-within {
-  z-index: 50;
-}
-
-/* Update button container styles */
 .button-container {
-  display: flex;
-  justify-content: center;
-  margin: 2rem auto 0;
-}
-
-/* Add styles for the view results button */
-.action-buttons {
   margin-top: 2rem;
   display: flex;
   justify-content: center;
+}
+
+.submit-vote-button {
+  display: flex;
   align-items: center;
-  gap: var(--spacing-4);
-  width: 100%;
-}
-
-.view-results-button {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background: #4F46E5;
-  color: white;
-  border-radius: 100px;
-  border: none;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.view-results-button:hover {
-  background: #4338CA;
-  transform: translateY(-1px);
-}
-
-/* Add styles for update vote button */
-.update-vote-button {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background: #059669;
-  color: white;
-  border-radius: 100px;
-  border: none;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.update-vote-button:hover {
-  background: #047857;
-  transform: translateY(-1px);
-}
-
-/* Add error message styles */
-.error-message {
-  color: #ef4444;
-  background-color: #fee2e2;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 0.75rem;
-  border-radius: 0.75rem;
-  margin: 1rem 0;
-  text-align: center;
-}
-
-.select-container {
-  position: relative;
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-select {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  background-color: white;
-  font-size: 1rem;
-  color: #374151;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.5rem center;
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-}
-
-.points-label {
-  font-size: 1.125rem;
-  color: #3b82f6;
+  border-radius: 6px;
+  transition: all 0.2s ease;
   font-weight: 500;
-  margin-bottom: 0.5rem;
+  width: 200px;
+  margin: 2rem auto;
 }
 
-.vote-group {
-  margin-bottom: 2rem;
+.submit-vote-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
-select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-select option {
-  padding: 0.5rem;
+.submit-vote-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 </style> 
