@@ -1,202 +1,148 @@
 <template>
   <div class="page-container">
     <div class="content-container">
-      <div class="min-h-screen bg-gray-100 p-8">
-        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
-          <h1 class="text-3xl font-bold mb-6 text-center">Eurovision Leaderboard</h1>
+      <h1 class="eurovision-title">EUROVISION 2025</h1>
 
-          <!-- Loading state -->
-          <div v-if="isLoading" class="text-center py-8">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p class="text-gray-600">Loading leaderboard...</p>
+      <!-- Loading state -->
+      <div v-if="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p class="loading-text">Loading leaderboard...</p>
+      </div>
+
+      <!-- Error state -->
+      <div v-else-if="error" class="text-center py-8">
+        <p class="text-red-500">{{ error }}</p>
+        <button 
+          @click="loadResults" 
+          class="primary-button"
+        >
+          Retry
+        </button>
+      </div>
+
+      <!-- Results -->
+      <div v-else>
+        <!-- Total Votes Counter -->
+        <div class="votes-section">
+          <div class="text-left">
+            <p class="text-gray-600">
+              Total Votes Cast: <span class="font-bold text-lg">{{ totalVotes }}</span>
+            </p>
           </div>
 
-          <!-- Error state -->
-          <div v-else-if="error" class="text-center py-8">
-            <p class="text-red-500">{{ error }}</p>
-            <button 
-              @click="loadResults" 
-              class="primary-button"
-            >
-              Retry
-            </button>
-          </div>
-
-          <!-- Results -->
-          <div v-else>
-            <!-- Total Votes Counter -->
-            <div class="mb-6 space-y-4">
-              <div class="text-left">
-                <p class="text-gray-600">
-                  Total Votes Cast: <span class="font-bold text-lg">{{ totalVotes }}</span>
-                </p>
-              </div>
-
-              <!-- Voters List -->
-              <div v-if="voters.length > 0" class="voters-section">
-                <h3 class="voters-title text-xl mb-4">Voters</h3>
-                <div class="voters-list">
-                  <div
-                    v-for="voter in voters"
-                    :key="voter.id"
-                    class="voter-card hover:bg-gray-50"
+          <!-- Voters List -->
+          <div v-if="voters.length > 0" class="voters-section">
+            <h3 class="voters-title text-xl mb-4">Voters</h3>
+            <div class="voters-list">
+              <div
+                v-for="voter in voters"
+                :key="voter.id"
+                class="voter-card hover:bg-gray-50"
+              >
+                <button 
+                  @click="toggleVoterDetails(voter)"
+                  class="voter-button py-4"
+                >
+                  <div class="voter-button-content">
+                    <span class="voter-name text-lg">{{ voter.displayName }}</span>
+                    <svg 
+                      class="w-[25px] h-[25px] text-gray-400 transition-transform duration-200"
+                      :class="{ 'transform rotate-90': selectedVoterId === voter.id }"
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 20 20" 
+                      fill="currentColor"
+                    >
+                      <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </button>
+                
+                <!-- Voter Details -->
+                <div 
+                  v-if="selectedVoterId === voter.id"
+                  class="voter-details bg-gray-50 border-t border-gray-200"
+                >
+                  <div 
+                    v-for="vote in voter.votes" 
+                    :key="vote.countryId"
+                    class="vote-item hover:bg-white"
                   >
-                    <button 
-                      @click="toggleVoterDetails(voter)"
-                      class="voter-button py-4"
-                    >
-                      <div class="voter-button-content">
-                        <span class="voter-name text-lg">{{ voter.displayName }}</span>
-                        <svg 
-                          class="w-[25px] h-[25px] text-gray-400 transition-transform duration-200"
-                          :class="{ 'transform rotate-90': selectedVoterId === voter.id }"
-                          xmlns="http://www.w3.org/2000/svg" 
-                          viewBox="0 0 20 20" 
-                          fill="currentColor"
-                        >
-                          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                        </svg>
-                      </div>
-                    </button>
-                    
-                    <!-- Voter Details -->
-                    <div 
-                      v-if="selectedVoterId === voter.id"
-                      class="voter-details bg-gray-50 border-t border-gray-200"
-                    >
-                      <div 
-                        v-for="vote in voter.votes" 
-                        :key="vote.countryId"
-                        class="vote-item hover:bg-white"
-                      >
-                        <div class="country-info">
-                          <span class="country-flag text-xl" role="img">
-                            {{ getCountryFlag(vote.countryId) }}
-                          </span>
-                          <span class="country-name font-medium">{{ vote.countryId }}</span>
-                        </div>
-                        <span class="points-badge bg-blue-50 text-blue-600">
-                          {{ vote.points }} points
-                        </span>
-                      </div>
+                    <div class="country-info">
+                      <span class="country-flag text-xl" role="img">
+                        {{ getCountryFlag(vote.countryId) }}
+                      </span>
+                      <span class="country-name font-medium">{{ vote.countryId }}</span>
                     </div>
+                    <span class="points-badge bg-blue-50 text-blue-600">
+                      {{ vote.points }} points
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- Leaderboard Table -->
-            <div class="overflow-hidden rounded-lg border border-gray-200 flex-column">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rank
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Country
-                    </th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Points
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr 
-                    v-for="(country, index) in sortedResults" 
-                    :key="country.name"
-                    :class="{
-                      'bg-yellow-50': index === 0,
-                      'bg-gray-50': index === 1,
-                      'bg-orange-50': index === 2
-                    }"
-                    class="hover:bg-gray-50 transition-colors"
-                  >
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="flex items-center">
-                        <span 
-                          class="w-8 h-8 flex items-center justify-center rounded-full font-bold"
-                          :class="{
-                            'bg-yellow-500 text-white': index === 0,
-                            'bg-gray-400 text-white': index === 1,
-                            'bg-orange-500 text-white': index === 2,
-                            'bg-blue-100 text-blue-800': index > 2
-                          }"
-                        >
-                          {{ index + 1 }}
-                        </span>
-                      </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="flex items-center space-x-2">
-                        <span class="text-xl" role="img" aria-label="country flag">
-                          {{ getCountryFlag(country.name) }}
-                        </span>
-                        <span class="text-sm font-medium text-gray-900">
-                          {{ country.name }}
-                        </span>
-                      </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right">
-                      <div class="text-sm font-bold">
-                        {{ country.totalPoints }} points
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+        <!-- Leaderboard Table -->
+        <div class="leaderboard-grid">
+          <template v-for="(country, index) in sortedResults" :key="country.name">
+            <div class="country-row">
+              <div class="rank-box">{{ index + 1 }}</div>
+              <div class="flag">{{ getCountryFlag(country.name) }}</div>
+              <div class="country-name">{{ country.name }}</div>
+              <div class="points">{{ country.totalPoints }}</div>
             </div>
+          </template>
+        </div>
 
-            <!-- No Results Message -->
-            <div v-if="sortedResults.length === 0" class="text-center py-8">
-              <p class="text-gray-600">No results available yet</p>
+        <!-- No Results Message -->
+        <div v-if="sortedResults.length === 0" class="text-center py-8">
+          <p class="text-gray-600">No results available yet</p>
+        </div>
+      </div>
+
+      <!-- Voter Details Modal -->
+      <div
+        v-if="selectedVoter"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+        @click="closeModal"
+      >
+        <div
+          class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full"
+          @click.stop
+        >
+          <!-- Modal Header -->
+          <div class="flex justify-between items-center mb-6 pb-3 border-b">
+            <h3 class="text-xl font-semibold text-gray-800">
+              {{ selectedVoter.userDisplayName }}'s Votes
+            </h3>
+            <button 
+              @click="closeModal" 
+              class="primary-button"
+              title="Close details"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span>Close</span>
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <div
+              v-for="vote in selectedVoter.votes"
+              :key="vote.countryId"
+              class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+            >
+              <span class="font-medium">{{ vote.countryName }}</span>
+              <span class="text-sm font-semibold px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                {{ vote.points }} points
+              </span>
             </div>
           </div>
 
-          <!-- Voter Details Modal -->
-          <div
-            v-if="selectedVoter"
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-            @click="closeModal"
-          >
-            <div
-              class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full"
-              @click.stop
-            >
-              <!-- Modal Header -->
-              <div class="flex justify-between items-center mb-6 pb-3 border-b">
-                <h3 class="text-xl font-semibold text-gray-800">
-                  {{ selectedVoter.userDisplayName }}'s Votes
-                </h3>
-                <button 
-                  @click="closeModal" 
-                  class="primary-button"
-                  title="Close details"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  <span>Close</span>
-                </button>
-              </div>
-
-              <div class="space-y-4">
-                <div
-                  v-for="vote in selectedVoter.votes"
-                  :key="vote.countryId"
-                  class="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
-                >
-                  <span class="font-medium">{{ vote.countryName }}</span>
-                  <span class="text-sm font-semibold px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
-                    {{ vote.points }} points
-                  </span>
-                </div>
-              </div>
-
-              <div class="mt-4 text-sm text-gray-500">
-                Voted: {{ formatVoteTime(selectedVoter.timestamp) }}
-              </div>
-            </div>
+          <div class="mt-4 text-sm text-gray-500">
+            Voted: {{ formatVoteTime(selectedVoter.timestamp) }}
           </div>
         </div>
       </div>
@@ -675,5 +621,122 @@ onUnmounted(() => {
   .voters-list {
     width: 100%;
   }
+}
+
+.leaderboard-container {
+  background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
+  position: relative;
+  color: white;
+  padding: 30px;
+  text-align: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.eurovision-title {
+  color: #0e0e80;
+  font-size: 3rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 2rem;
+  text-shadow: none;
+}
+
+.leaderboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.country-row {
+  display: grid;
+  grid-template-columns: 60px 60px 1fr 100px;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  color: #0e0e80;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 0.5rem;
+	margin-bottom: 0.5rem;
+}
+
+.rank-box {
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--eurovision-rank-bg);
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.flag {
+  font-size: 1.5rem;
+}
+
+.country-name {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.points {
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-align: right;
+}
+
+.votes-section {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  color: white;
+  max-width: 800px;
+  margin: 2rem auto;
+}
+
+.loading-state,
+.error-state {
+  color: white;
+  text-align: center;
+}
+
+/* Adding vertical light streaks */
+.leaderboard-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.2) 5%,
+    rgba(255, 255, 255, 0) 10%
+  );
+  opacity: 0.5;
+  animation: moveLights 5s linear infinite;
+}
+
+/* Light animation effect */
+@keyframes moveLights {
+  0% {
+    transform: translateX(-10%);
+  }
+  100% {
+    transform: translateX(10%);
+  }
+}
+
+.content-container {
+  position: relative; /* Add this to keep content above the light effect */
+  z-index: 1;        /* Ensure content stays above the animated background */
 }
 </style> 

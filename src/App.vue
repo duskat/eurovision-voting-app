@@ -37,7 +37,6 @@ onMounted(() => {
 nav {
   width: 100%;
   padding: 20px;
-  background-color: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: center;
