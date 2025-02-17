@@ -130,15 +130,6 @@ nav a.router-link-active {
   padding: 0.5rem;
 }
 
-.user-info {
-  color: white;
-  font-weight: 500;
-  padding: 0.75rem 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 0.9rem;
-}
-
 .user-info-header {
   padding: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);

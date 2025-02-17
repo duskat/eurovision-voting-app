@@ -165,6 +165,7 @@ body {
   letter-spacing: -0.025em;
   line-height: 1.2;
   text-align: center;
+  color: white;
 }
 
 /* ==========================================================================
@@ -546,17 +547,41 @@ body {
    ========================================================================== */
 .login-section {
   width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
+  max-width: 600px;
+  margin: 0 auto var(--spacing-6) auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-4);
+  background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
+  border-radius: var(--radius-lg);
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.login-text {
-  font-size: 1.1rem;
-  color: var(--color-gray-600);
+.login-section .login-text {
+  color: white;
+  font-size: var(--font-size-lg);
   margin-bottom: var(--spacing-8);
   text-align: center;
 }
 
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .login-section {
+    padding: var(--spacing-3);
+    margin: var(--spacing-2);
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+}
+
+/* ==========================================================================
+   Login & Authentication Components
+   ========================================================================== */
 .quick-login-form {
   width: 100%;
   max-width: 400px;
@@ -615,30 +640,80 @@ body {
 /* Welcome section styles */
 .welcome-section {
   width: 100%;
-  max-width: 800px;
-  text-align: center;
-  margin: 0 auto;
+  max-width: 600px;
+  margin: 0 auto var(--spacing-6) auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-4);
+  background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
+  border-radius: var(--radius-lg);
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.welcome-section h1,
+.welcome-section h2,
+.welcome-section h3,
+.welcome-section h4,
+.welcome-section h5,
+.welcome-section h6,
 .welcome-section p {
-  margin-bottom: auto;
+  color: white;
+}
+
+.welcome-section .welcome-text {
+  color: white;
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--spacing-8);
+}
+
+.welcome-section h1 {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .welcome-section {
+    padding: var(--spacing-3);
+    margin: var(--spacing-2);
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+
+  .welcome-section h1 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
 }
 
 .user-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-4);
+  gap: var(--spacing-2);
   margin-bottom: var(--spacing-6);
   width: 100%;
   text-align: center;
+  color: white;
+  margin-bottom: 0;
 }
 
 .user-header h2 {
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
-  color: var(--color-gray-800);
+  color: white;
+  margin-bottom: 0;
 }
 
 .welcome-text {
@@ -655,16 +730,26 @@ body {
   margin-bottom: var(--spacing-8);
 }
 
+/* 
 .user-info {
-  font-size: var(--font-size-sm);
-  color: var(--color-gray-500);
-  background-color: var(--color-gray-100);
-  padding: var(--spacing-3);
-  border-radius: var(--radius-md);
-}
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  color: white;
+  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  font-weight: 500;
+  transition: var(--transition-base);
+  margin: 25px 0 0 0;
+} */
 
 .user-type {
-  margin: 10px 0;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+
 }
 
 .logout-button {
@@ -686,9 +771,11 @@ body {
   background-color: #E0E7FF;
 }
 
-.logout-icon {
+.logout-button svg {
   width: 1.25rem;
   height: 1.25rem;
+  color: white !important;
+  fill: currentColor;
 }
 
 .secondary-button {
@@ -730,46 +817,44 @@ body {
   text-align: center;
   font-size: var(--font-size-lg);
   font-weight: 600;
-  color: var(--color-gray-700);
+  color: white;
   margin-bottom: var(--spacing-4);
   padding-bottom: var(--spacing-2);
-  border-bottom: 2px solid var(--color-gray-200);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .admin-danger-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-2);
-  width: 60%;
-  max-width: 300px;
   padding: 0.875rem 1.5rem;
-  background: var(--color-error);
-  color: var(--color-white);
+  border-radius: 100px;
+  background: #EF4444;
+  color: white !important;
   border: none;
-  border-radius: var(--radius-full);
   font-weight: 500;
-  font-size: var(--font-size-base);
+  text-decoration: none;
+  transition: all 0.2s ease;
   cursor: pointer;
-  transition: var(--transition-base);
-  box-shadow: var(--shadow-sm);
-}
-
-.admin-danger-button:hover:not(:disabled) {
-  background: #dc2626;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.admin-danger-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  background: var(--color-gray-400);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .admin-danger-button svg {
   width: 25px;
   height: 25px;
+  color: white !important;
+  fill: white !important;
+  stroke: white !important;
+}
+
+.admin-danger-button path {
+  fill: white !important;
+  stroke: white !important;
+}
+
+.admin-danger-button span {
+  color: white !important;
+  display: flex;
+  align-items: center;
 }
 
 /* Mobile styles for admin controls */
@@ -848,23 +933,30 @@ body {
 }
 
 .guest-button {
-  width: 90%;
-  padding: 1rem;
-  border: none;
-  border-radius: 100px;
-  font-size: 1rem;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
   color: white;
-  background: linear-gradient(90deg, #4CC9F0 0%, #7209B7 100%);
+  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
+  border-radius: 6px;
   transition: all 0.2s ease;
-  margin-top: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+  width: 100%;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 45px;
+  margin: var(--spacing-4) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .guest-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .guest-button:disabled {
@@ -891,9 +983,6 @@ nav a.router-link-active {
 }
 
 /* Override text colors for h2 in content container */
-.content-container h2 {
-  color: #0e0e80;
-}
 
 .success-message h2 {
   color: white;
@@ -1001,7 +1090,7 @@ nav a.router-link-active {
   align-items: center;
   gap: var(--spacing-2);
   padding: var(--spacing-2) var(--spacing-4);
-  background-color: #FFF3CD;
+  background-color: white;
   border-radius: var(--radius-full);
   font-size: var(--font-size-sm);
   color: #92400E;
@@ -1016,11 +1105,6 @@ nav a.router-link-active {
   color: #92400E;
   opacity: 0.9;
   fill: currentColor;
-}
-
-.admin-status:hover {
-  background-color: #FEF3C7;
-  transform: translateY(-1px);
 }
 
 @media (max-width: 640px) {
@@ -1092,7 +1176,7 @@ nav a.router-link-active {
 
 .user-type-label {
   font-size: var(--font-size-sm);
-  color: var(--color-gray-500);
+  color: var(--color-gray-500) !important;
 }
 
 .dropdown-logout {
@@ -1137,6 +1221,14 @@ svg.logout-icon,
 .admin-danger-button svg {
   width: 25px;
   height: 25px;
+  color: white !important;
+  fill: white !important;
+  stroke: white !important;
+}
+
+.admin-danger-button path {
+  fill: white !important;
+  stroke: white !important;
 }
 
 .admin-status .admin-icon {
@@ -1231,4 +1323,33 @@ svg.logout-icon,
 .voter-item:hover {
   background: rgba(255, 255, 255, 0.15);
   transform: translateX(4px);
+}
+
+.welcome-section .logout-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  margin-bottom: 0;
+  /* Remove the original margin */
+}
+
+.welcome-section .logout-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.welcome-section .logout-button svg {
+  color: white !important;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
 }
