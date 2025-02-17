@@ -564,39 +564,44 @@ svg {
 .voters-section {
   margin-top: var(--spacing-12);
   padding-top: var(--spacing-8);
-  border-top: 2px solid var(--color-gray-200);
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.5s ease, transform 0.5s ease;
-  background: var(--color-white);
+  background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
   padding: var(--spacing-6);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 800px;
   margin: var(--spacing-12) auto;
   box-sizing: border-box;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .section-title {
   font-size: var(--font-size-xl);
-  color: var(--color-gray-800);
+  color: white;
   margin-bottom: var(--spacing-6);
   text-align: center;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .voters-list {
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: var(--color-white);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .voter-card {
-  background: white;
-  border-bottom: 1px solid var(--color-gray-200);
+  background: transparent;
+  border: none;
   transition: all 0.3s ease;
   padding: var(--spacing-2);
 }
@@ -606,13 +611,17 @@ svg {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  background: transparent;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: var(--color-gray-900);
+  color: white;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-base);
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 0.5rem;
 }
 
 .voter-button-content {
@@ -622,21 +631,27 @@ svg {
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  gap: var(--spacing-4);
 }
 
 .voter-name {
   font-size: 1rem;
-  color: var(--color-gray-700);
+  color: white;
+  font-weight: 500;
+  letter-spacing: 0.05em;
 }
 
 .voter-button:hover {
-  background: var(--color-gray-100);
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 .voter-details {
-  border-top: 1px solid var(--color-gray-200);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.75rem;
-  background: var(--color-gray-50);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin: 0.5rem;
 }
 
 .vote-item {
@@ -648,6 +663,8 @@ svg {
   background: transparent;
   border-radius: 0.5rem;
   transition: all 0.2s ease;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .vote-item:last-child {
@@ -665,8 +682,11 @@ svg {
 }
 
 .country-name {
-  font-size: 0.875rem;
-  color: var(--color-gray-700);
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .points-badge {
@@ -675,6 +695,8 @@ svg {
   font-size: 0.75rem;
   font-weight: 600;
   transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
 @media (max-width: 768px) {
@@ -700,30 +722,58 @@ svg {
   .leaderboard-grid {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    max-width: 800px;
     margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
+    border-radius: 12px;
   }
 
   .country-row {
     display: grid;
-    grid-template-columns: minmax(30px, 40px) minmax(30px, 40px) 1fr minmax(50px, 80px);
+    grid-template-columns: 35px auto 1fr 50px;
     align-items: center;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 0.5rem;
     border-radius: 8px;
-    color: #0e0e80;
+    color: white;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     margin-bottom: 0.25rem;
     width: 100%;
     box-sizing: border-box;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 0.5rem;
   }
 
   .rank-box {
     width: 30px;
     height: 30px;
-    font-size: 1rem;
+    font-size: 0.9rem;
+    min-width: 30px;
+    min-height: 30px;
+  }
+
+  .flag {
+    font-size: 1.25rem;
+    width: 30px;
+  }
+
+  .country-name {
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+  }
+
+  .points {
+    font-size: 0.9rem;
+    min-width: 40px;
   }
 
   .voters-section {
@@ -788,26 +838,32 @@ svg {
 .leaderboard-grid {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  padding: 0 var(--spacing-4);
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
+  border-radius: 12px;
 }
 
 .country-row {
   display: grid;
-  grid-template-columns: minmax(35px, 60px) minmax(35px, 60px) 1fr minmax(60px, 100px);
+  grid-template-columns: 45px auto 1fr 60px;
   align-items: center;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
   border-radius: 8px;
-  color: #0e0e80;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   margin-bottom: 0.5rem;
   width: 100%;
   box-sizing: border-box;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 0.75rem;
 }
 
 .rank-box {
@@ -816,26 +872,42 @@ svg {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--eurovision-rank-bg);
+  background: #F72585;
   border-radius: 6px;
-  font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  color: white;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  font-weight: 600;
+  min-width: 35px;
+  min-height: 35px;
 }
 
 .flag {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
+  text-align: center;
+  width: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .country-name {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  color: white;
+  text-align: left;
+  font-size: 1.1rem;
 }
 
 .points {
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   text-align: right;
+  color: white;
 }
 
 .votes-section {
@@ -896,9 +968,12 @@ svg {
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-4);
-  background: var(--color-gray-50);
+  background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
   border-radius: var(--radius-lg);
   box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .total-votes {
@@ -906,24 +981,31 @@ svg {
   align-items: center;
   gap: var(--spacing-4);
   font-size: var(--font-size-lg);
-  color: var(--color-gray-700);
+  color: white;
   font-weight: 500;
   margin: auto;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .view-voters-link {
   padding: var(--spacing-2) var(--spacing-4);
-  color: var(--color-primary-light);
+  color: white;
   background: none;
   border: none;
   font-weight: 500;
   cursor: pointer;
   transition: var(--transition-base);
-  text-decoration: underline;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .view-voters-link:hover {
-  color: var(--color-primary-dark);
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 /* Add wrapper class for results */
@@ -933,5 +1015,11 @@ svg {
   margin: 0 auto;
   box-sizing: border-box;
   overflow: hidden;
+}
+
+/* Hover effect for rows */
+.country-row:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
 }
 </style> 

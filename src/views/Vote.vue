@@ -313,44 +313,51 @@ const startNewVote = async () => {
 /* Select container */
 .custom-select {
   position: relative;
-  flex: 1;
-  min-width: 0; /* Prevent flex item from overflowing */
-  box-sizing: border-box;
+  width: 100%;
+  background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Select button */
 .select-button {
   width: 100%;
-  padding: 12px 16px;
-  background: white;
-  border: 1px solid #eaeaea;
-  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  font-size: 1rem;
-  color: #1F2937;
+  align-items: center;
   cursor: pointer;
-  transition: border-color 0.2s;
+  color: white;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
 }
 
 .select-button:hover {
-  border-color: #d1d1d1;
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* Dropdown menu */
 .dropdown-menu {
   position: absolute;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  width: 100%;
-  box-sizing: border-box;
+  top: calc(100% + 0.5rem);
   left: 0;
-  top: 100%;
-  margin-top: 0.5rem;
-  padding: 8px 0;
+  width: 100%;
+  z-index: 50;
+  background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  backdrop-filter: blur(5px);
 }
 
 .dropdown-content {
@@ -364,25 +371,56 @@ const startNewVote = async () => {
 /* Country options */
 .country-option {
   width: 100%;
-  padding: 12px 16px;
+  padding: 0.75rem 1rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 1rem;
-  color: #374151;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   border: none;
+  color: white;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .country-option:hover {
-  background: #f5f5f5;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.country-option.selected {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
 }
 
 .country-flag {
-  font-size: 1.25rem;
-  margin-right: 8px;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+}
+
+.dropdown-arrow {
+  width: 20px;
+  height: 20px;
+  color: white;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+.points-label {
+  font-size: 1.125rem;
+  color: white;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* Mobile styles */
@@ -459,6 +497,16 @@ const startNewVote = async () => {
   .update-vote-button {
     width: 100%;
     text-align: center;
+  }
+
+  .country-option {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .country-flag {
+    font-size: 1.25rem;
+    width: 30px;
   }
 }
 
