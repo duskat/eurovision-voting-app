@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
     <div class="content-container">
-      <h1 class="page-title">Eurovision Voting</h1>
+      <h1 class="eurovision-title">EUROVISION VOTING 2025</h1>
 
       <!-- Loading State -->
       <div v-if="isLoading" class="loading-state">

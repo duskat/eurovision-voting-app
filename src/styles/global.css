@@ -190,7 +190,7 @@ body {
   composes: button-base;
   color: var(--color-white);
   background: var(--gradient-primary);
-  padding: 1rem 2.5rem;
+  padding: 1rem;
   font-size: 16px;
   border-radius: 999px;
   font-weight: 500;
@@ -380,11 +380,13 @@ body {
    ========================================================================== */
 .error-message {
   color: var(--color-error);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-2);
+  text-align: left;
+  width: 100%;
+  padding: var(--spacing-2);
   background-color: var(--color-error-light);
-  padding: var(--spacing-3);
-  border-radius: var(--radius-md);
-  margin: var(--spacing-4) 0;
-  text-align: center;
+  border-radius: var(--radius-sm);
 }
 
 .success-message {
@@ -405,6 +407,11 @@ body {
     margin: var(--spacing-2);
   }
 
+  .action-buttons {
+    align-items: center;
+    width: 60%;
+  }
+
   .button-base {
     padding: var(--spacing-3) var(--spacing-6);
     font-size: var(--font-size-sm);
@@ -414,6 +421,37 @@ body {
     flex-direction: column;
     width: 100%;
     gap: var(--spacing-3);
+    align-items: center;
+  }
+
+  .primary-button,
+  .view-results-button,
+  .update-vote-button,
+  .admin-button {
+    width: 90%;
+    max-width: 300px;
+  }
+
+  .admin-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .admin-controls .admin-danger-button {
+    padding: 0.875rem 1.5rem;
+    border-radius: 100px;
+    background: #EF4444;
+    color: white;
+    border: none;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .admin-controls button svg {
+    display: none;
   }
 }
 
@@ -506,13 +544,28 @@ body {
   width: 100%;
   max-width: 800px;
   text-align: center;
+  margin: 0 auto;
+}
+
+.welcome-section p {
+  margin-bottom: auto;
 }
 
 .user-header {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  gap: var(--spacing-4);
   margin-bottom: var(--spacing-6);
+  width: 100%;
+  text-align: center;
+}
+
+.user-header h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  color: var(--color-gray-800);
 }
 
 .welcome-text {
@@ -525,6 +578,7 @@ body {
   display: flex;
   gap: var(--spacing-4);
   justify-content: center;
+  margin-top: var(--spacing-8);
   margin-bottom: var(--spacing-8);
 }
 
@@ -536,27 +590,48 @@ body {
   border-radius: var(--radius-md);
 }
 
+.user-type {
+  margin: 10px 0;
+}
+
 .logout-button {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-2);
   padding: var(--spacing-2) var(--spacing-4);
   color: var(--color-gray-600);
-  background-color: var(--color-gray-100);
+  background-color: #EEF2FF;
   border: none;
   border-radius: var(--radius-full);
+  font-weight: 500;
   cursor: pointer;
   transition: var(--transition-base);
+  margin-bottom: 20px;
 }
 
 .logout-button:hover {
-  background-color: var(--color-gray-200);
-  color: var(--color-gray-700);
+  background-color: #E0E7FF;
 }
 
 .logout-icon {
   width: 1.25rem;
   height: 1.25rem;
+}
+
+.secondary-button {
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--radius-full);
+  background: white;
+  color: #4F46E5;
+  border: 2px solid #E0E7FF;
+  font-weight: 500;
+  text-decoration: none;
+  transition: var(--transition-base);
+}
+
+.secondary-button:hover {
+  background: #EEF2FF;
+  border-color: #4F46E5;
 }
 
 /* Form container */
@@ -572,29 +647,81 @@ body {
   transform: rotate(180deg);
 }
 
-/* Admin danger button */
+/* ==========================================================================
+   Admin Controls & Buttons
+   ========================================================================== */
+.admin-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-4);
+  margin: var(--spacing-8) 0;
+  width: 100%;
+  position: relative;
+}
+
+.admin-controls::before {
+  content: "Admin Control Panel";
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-gray-700);
+  margin-bottom: var(--spacing-4);
+  padding-bottom: var(--spacing-2);
+  border-bottom: 2px solid var(--color-gray-200);
+}
+
 .admin-danger-button {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  justify-content: center;
+  gap: var(--spacing-2);
+  width: 60%;
+  max-width: 300px;
+  padding: 0.875rem 1.5rem;
   background: var(--color-error);
-  color: white;
+  color: var(--color-white);
+  border: none;
   border-radius: var(--radius-full);
   font-weight: 500;
-  transition: var(--transition-base);
-  border: none;
+  font-size: var(--font-size-base);
   cursor: pointer;
+  transition: var(--transition-base);
+  box-shadow: var(--shadow-sm);
 }
 
 .admin-danger-button:hover:not(:disabled) {
   background: #dc2626;
   transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .admin-danger-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+  background: var(--color-gray-400);
+}
+
+.admin-danger-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Mobile styles for admin controls */
+@media (max-width: 768px) {
+  .admin-controls {
+    gap: var(--spacing-3);
+  }
+
+  .admin-danger-button {
+    width: 40%;
+  }
+
+  .admin-controls button svg {
+    display: none;
+  }
 }
 
 /* Modal backdrop */
@@ -603,19 +730,17 @@ body {
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 1000;
-  padding: 1rem;
 }
 
 .modal-content {
   background: white;
+  padding: var(--spacing-8);
   border-radius: var(--radius-lg);
-  padding: 2rem;
-  max-width: 500px;
   width: 100%;
-  box-shadow: var(--shadow-lg);
+  max-width: 400px;
 }
 
 /* Quick Login Form */
@@ -703,15 +828,6 @@ nav a.router-link-active {
 }
 
 /* Override text colors for h2 in content container */
-h1 {
-  color: #0e0e80 !important;
-  font-size: 3rem;
-  font-weight: 800;
-  text-align: center;
-  margin-bottom: 2rem;
-  text-shadow: none;
-}
-
 .content-container h2 {
   color: #0e0e80;
 }
@@ -750,4 +866,103 @@ h1 {
   opacity: 0.7;
   cursor: not-allowed;
   background: var(--gradient-disabled);
+}
+
+@media (max-width: 640px) {
+  .welcome-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .user-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-4);
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .name-input {
+    font-size: 16px;
+    /* Prevents zoom on mobile */
+  }
+}
+
+.eurovision-title {
+  color: #0e0e80;
+  font-size: 3rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 2rem;
+  text-shadow: none;
+  text-transform: uppercase;
+}
+
+/* Input error styles */
+.input-error {
+  border-color: var(--color-error) !important;
+  background-color: var(--color-error-light);
+}
+
+@media (max-width: 640px) {
+  .welcome-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .user-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-4);
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .name-input {
+    font-size: 16px;
+    /* Prevents zoom on mobile */
+  }
+}
+
+/* Admin Status Message */
+.admin-status {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: #FFF3CD;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  color: #92400E;
+  margin-top: var(--spacing-2);
+  font-weight: 500;
+  transition: var(--transition-base);
+}
+
+.admin-status .admin-icon {
+  width: 20px;
+  height: 20px;
+  color: #92400E;
+  opacity: 0.9;
+  fill: currentColor;
+}
+
+.admin-status:hover {
+  background-color: #FEF3C7;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .admin-status {
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-2);
+  }
 }

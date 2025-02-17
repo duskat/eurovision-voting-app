@@ -25,7 +25,7 @@ const SESSION_KEY = 'eurovision_session';
 const user = ref(null);
 const guestUser = ref(null);
 const error = ref(null);
-const isLoading = ref(false);
+const isLoading = ref(true);
 let authInitialized = false;
 
 // Initialize auth state listener
@@ -220,28 +220,27 @@ export function useAuth(router) {
   // Update login function
   const login = async (response) => {
     try {
-      isLoading.value = true;
-      const token = response.credential;
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const credential = GoogleAuthProvider.credentialFromResult(response);
+      if (!credential) throw new Error('No credential received');
 
       const userData = {
-        id: payload.sub,
-        displayName: payload.name,
-        name: payload.name,
-        email: payload.email,
-        picture: payload.picture,
-        token,
+        uid: response.user.uid,
+        email: response.user.email,
+        displayName: response.user.displayName,
         type: 'google',
       };
 
+      // Save to Firestore
+      await setDoc(doc(db, 'users', response.user.uid), userData);
+
       user.value = userData;
-      saveSession(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+
       return userData;
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    } finally {
-      isLoading.value = false;
+    } catch (err) {
+      console.error('Login error:', err);
+      error.value = err.message;
+      throw err;
     }
   };
 
@@ -289,6 +288,29 @@ export function useAuth(router) {
   // Initialize auth state on component mount
   onMounted(() => {
     const unsubscribe = initializeAuth();
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      user.value = JSON.parse(savedUser);
+    }
+
+    // Listen for auth state changes
+    auth.onAuthStateChanged((firebaseUser) => {
+      isLoading.value = false;
+      if (firebaseUser) {
+        const userData = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          type: 'google',
+        };
+        user.value = userData;
+        localStorage.setItem('user', JSON.stringify(userData));
+      } else {
+        user.value = null;
+        localStorage.removeItem('user');
+      }
+    });
+
     return () => {
       if (unsubscribe) unsubscribe();
     };
