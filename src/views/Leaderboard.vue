@@ -828,7 +828,7 @@ svg {
 
 .eurovision-title {
   color: #0e0e80;
-  font-size: 3rem;
+  font-size: 2rem;
   font-weight: 800;
   text-align: center;
   margin-bottom: 2rem;
@@ -1021,5 +1021,12 @@ svg {
 .country-row:hover {
   background: rgba(255, 255, 255, 0.15);
   transform: translateY(-1px);
+}
+
+/* Add media query for small mobile view */
+@media (max-width: 480px) {
+  .country-name {
+    font-size: medium;
+  }
 }
 </style> 
