@@ -26,6 +26,7 @@ const user = ref(null);
 const guestUser = ref(null);
 const error = ref(null);
 const isLoading = ref(true);
+const isAuthenticated = ref(false);
 let authInitialized = false;
 
 // Initialize auth state listener
@@ -353,17 +354,20 @@ export function useAuth(router) {
         }
 
         if (userData.type === 'google') {
-          // Verify Firebase auth state matches
           if (!auth.currentUser) {
             clearSession();
             return;
           }
-          user.value = {
-            ...userData,
-            displayName: userData.displayName || userData.name,
-          };
+          user.value = userData;
         } else if (userData.type === 'guest') {
           guestUser.value = userData;
+        }
+
+        // Restore last route if exists
+        const lastRoute = localStorage.getItem('intendedRoute');
+        if (lastRoute) {
+          router.push(lastRoute);
+          localStorage.removeItem('intendedRoute');
         }
       } catch (error) {
         console.error('Error parsing session:', error);
@@ -389,6 +393,21 @@ export function useAuth(router) {
   // Initialize on creation
   initAuth();
 
+  const checkAuthState = async () => {
+    if (isLoading.value) {
+      try {
+        // Check if user is logged in (e.g., check localStorage, session, or token)
+        const token = localStorage.getItem('auth_token');
+        isAuthenticated.value = !!token;
+      } catch (error) {
+        console.error('Error checking auth state:', error);
+        isAuthenticated.value = false;
+      } finally {
+        isLoading.value = false;
+      }
+    }
+  };
+
   return {
     user,
     guestUser,
@@ -404,5 +423,7 @@ export function useAuth(router) {
     login,
     initAuth,
     getUserId,
+    isAuthenticated,
+    checkAuthState,
   };
 }

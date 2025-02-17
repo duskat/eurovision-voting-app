@@ -20,6 +20,7 @@ const routes = [
     path: '/leaderboard',
     name: 'Leaderboard',
     component: Leaderboard,
+    meta: { requiresAuth: true },
   },
   {
     path: '/login',
@@ -51,28 +52,19 @@ router.beforeEach(async (to, from, next) => {
     const guestUser = localStorage.getItem('guestUser');
 
     if (!firebaseUser && !guestUser) {
-      // User is not authenticated
+      // Store the intended destination
+      localStorage.setItem('intendedRoute', to.fullPath);
+      // Redirect to login
       next({
         path: '/login',
         query: { redirect: to.fullPath },
       });
     } else {
-      // User is authenticated
-      next();
-    }
-  } else if (to.path === '/login') {
-    // Check if user is already authenticated
-    const firebaseUser = await waitForAuthInit();
-    const guestUser = localStorage.getItem('guestUser');
-
-    if (firebaseUser || guestUser) {
-      // If user is authenticated and tries to access login page,
-      // redirect to vote page or the requested redirect
-      next(to.query.redirect || '/vote');
-    } else {
+      // User is authenticated, proceed
       next();
     }
   } else {
+    // Route doesn't require auth
     next();
   }
 });

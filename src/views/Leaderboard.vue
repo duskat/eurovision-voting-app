@@ -94,7 +94,7 @@
                     <span class="country-name font-medium">{{ vote.countryId }}</span>
                   </div>
                   <span class="points-badge bg-blue-50 text-blue-600">
-                    {{ vote.points }} points
+                    {{ vote.points }}
                   </span>
                 </div>
               </div>
@@ -589,7 +589,7 @@ svg {
   letter-spacing: 0.05em;
 }
 
-.voters-list {
+/* .voters-list {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -597,7 +597,7 @@ svg {
   border-radius: var(--radius-lg);
   backdrop-filter: blur(5px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-}
+} */
 
 .voter-card {
   background: transparent;
@@ -709,9 +709,7 @@ svg {
     margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
-    padding: 1.5rem;
-    background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
-    border-radius: 12px;
+    padding: 1.5rem 0;
   }
 
   .country-row {
@@ -825,9 +823,7 @@ svg {
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #090979, #1b1b94, #4b0082);
-  border-radius: 12px;
+  padding: 1.5rem 0;
 }
 
 .country-row {

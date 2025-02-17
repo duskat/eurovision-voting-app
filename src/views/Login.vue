@@ -50,14 +50,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import GoogleLogin from '../components/GoogleLogin.vue';
 import { useAuth } from '../composables/useAuth';
 
 const router = useRouter();
 const route = useRoute();
-const { login, signInWithName } = useAuth(router);
+const { login, signInWithName, isLoggedIn } = useAuth();
 
 const nameInput = ref('');
 const nameError = ref(false);
@@ -98,6 +98,15 @@ const handleLoginSuccess = async (response) => {
 const handleLoginError = (error) => {
   console.error('Login failed:', error);
 };
+
+onMounted(() => {
+  // If user is already logged in, redirect to intended route or default
+  if (isLoggedIn.value) {
+    const intendedRoute = localStorage.getItem('intendedRoute') || '/vote';
+    localStorage.removeItem('intendedRoute'); // Clear stored route
+    router.push(intendedRoute);
+  }
+});
 </script>
 
 <style scoped>
