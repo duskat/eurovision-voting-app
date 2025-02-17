@@ -28,9 +28,9 @@
             </div>
           </div>
           <div class="action-buttons">
-            <router-link to="/leaderboard" class="view-results-button">
+            <button @click="router.push('/leaderboard')" class="view-results-button">
               View Results
-            </router-link>
+            </button>
             <button 
               v-if="canUpdateVote" 
               @click="startNewVote" 

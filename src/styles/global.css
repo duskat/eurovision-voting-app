@@ -187,7 +187,6 @@ body {
 }
 
 .primary-button {
-  composes: button-base;
   color: var(--color-white);
   background: var(--gradient-primary);
   padding: 1rem;
@@ -199,6 +198,9 @@ body {
   align-items: center;
   justify-content: center;
   text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-base);
 }
 
 .primary-button:hover:not(:disabled) {
@@ -213,10 +215,19 @@ body {
 }
 
 .secondary-button {
-  composes: button-base;
   color: var(--color-gray-700);
   background: var(--color-gray-100);
   box-shadow: var(--shadow-sm);
+  padding: 1rem 2rem;
+  font-size: 16px;
+  border-radius: 999px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-base);
 }
 
 .secondary-button:hover:not(:disabled) {
@@ -705,8 +716,8 @@ body {
 }
 
 .admin-danger-button svg {
-  width: 20px;
-  height: 20px;
+  width: 25px;
+  height: 25px;
 }
 
 /* Mobile styles for admin controls */
@@ -948,8 +959,8 @@ nav a.router-link-active {
 }
 
 .admin-status .admin-icon {
-  width: 20px;
-  height: 20px;
+  width: 25px;
+  height: 25px;
   color: #92400E;
   opacity: 0.9;
   fill: currentColor;
@@ -965,4 +976,107 @@ nav a.router-link-active {
     font-size: var(--font-size-sm);
     padding: var(--spacing-2);
   }
+}
+
+/* User Navigation Dropdown */
+.user-nav {
+  position: relative;
+  margin-left: auto;
+}
+
+.user-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-white);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-base);
+  box-shadow: var(--shadow-sm);
+}
+
+.user-icon-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* User Dropdown Styles */
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  width: 220px;
+  margin-top: 0;
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 102;
+  overflow: hidden;
+}
+
+.user-dropdown-content {
+  padding: var(--spacing-4);
+  background: var(--color-white);
+}
+
+.user-info-header {
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.user-name {
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin-bottom: var(--spacing-1);
+}
+
+.user-type-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+}
+
+.dropdown-logout {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-4);
+  color: var(--color-error);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.dropdown-logout:hover {
+  background: var(--color-error-light);
+}
+
+/* Common SVG icon styles */
+.w-5,
+.w-6,
+svg.logout-icon,
+.admin-icon,
+.admin-danger-button svg,
+.user-icon-button svg {
+  width: 25px !important;
+  height: 25px !important;
+  min-width: 25px;
+  min-height: 25px;
+}
+
+.admin-danger-button svg {
+  width: 25px;
+  height: 25px;
+}
+
+.admin-status .admin-icon {
+  width: 25px;
+  height: 25px;
+  color: #92400E;
+  opacity: 0.9;
+  fill: currentColor;
 }

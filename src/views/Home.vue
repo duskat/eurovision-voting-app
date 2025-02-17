@@ -31,8 +31,8 @@
         </div>
         <p class="welcome-text">Ready to cast your votes for Eurovision?</p>
         <div class="action-buttons">
-          <router-link to="/vote" class="primary-button">Cast Your Vote</router-link>
-          <router-link to="/leaderboard" class="secondary-button">View Leaderboard</router-link>
+          <button @click="router.push('/vote')" class="primary-button">Cast Your Vote</button>
+          <button @click="router.push('/leaderboard')" class="secondary-button">View Leaderboard</button>
         </div>
         <!-- Admin Controls (only show for admin) -->
         <div v-if="isAdmin" class="admin-controls">
@@ -153,6 +153,38 @@
       </div>
     </div>
   </div>
+
+  <!-- Reset Votes Confirmation Modal -->
+  <div v-if="showResetModal" class="modal-backdrop">
+    <div class="modal-content">
+      <h3 class="text-xl font-bold mb-4">Reset All Votes</h3>
+      <div class="text-gray-600 mb-6">
+        <p class="mb-2">Are you sure you want to reset all votes?</p>
+        <p class="mb-2">This will:</p>
+        <ul class="list-disc ml-6 mt-2">
+          <li>Remove all existing votes</li>
+          <li>Reset the leaderboard</li>
+          <li>Allow users to vote again</li>
+          <li>This action cannot be undone</li>
+        </ul>
+      </div>
+      <div class="flex justify-end space-x-4">
+        <button
+          @click="showResetModal = false"
+          class="secondary-button"
+        >
+          Cancel
+        </button>
+        <button
+          @click="handleResetConfirm"
+          class="admin-danger-button"
+          :disabled="isResetting"
+        >
+          {{ isResetting ? 'Resetting...' : 'Yes, Reset Votes' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -214,7 +246,7 @@ const handleQuickLogin = async () => {
   try {
     await signInWithName(trimmedName);
     nameInput.value = '';
-    router.push('/vote');
+    router.push('/');
   } catch (error) {
     console.error('Quick login error:', error);
     if (error.code === 'auth/username-already-in-use') {
@@ -250,21 +282,25 @@ const handleLogout = async () => {
 const showDeleteUsersModal = ref(false);
 const isDeletingUsers = ref(false);
 const isResetting = ref(false);
+const showResetModal = ref(false);
 
 const isAdmin = computed(() => user.value?.email === 'dprybysh@gmail.com');
 
 // Admin functions
 const confirmReset = async () => {
-  if (confirm('Are you sure you want to reset all votes? This action cannot be undone.')) {
-    try {
-      isResetting.value = true;
-      await resetAllResults();
-      router.push('/leaderboard');
-    } catch (err) {
-      console.error('Error resetting votes:', err);
-    } finally {
-      isResetting.value = false;
-    }
+  showResetModal.value = true;
+};
+
+const handleResetConfirm = async () => {
+  try {
+    isResetting.value = true;
+    await resetAllResults();
+    showResetModal.value = false;
+    router.push('/leaderboard');
+  } catch (err) {
+    console.error('Error resetting votes:', err);
+  } finally {
+    isResetting.value = false;
   }
 };
 
