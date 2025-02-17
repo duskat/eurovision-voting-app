@@ -3,6 +3,16 @@
     <div class="content-container">
       <h1 class="eurovision-title">EUROVISION VOTING 2025</h1>
 
+      <!-- Results Header -->
+      <div class="results-header">
+        <div class="total-votes">
+          Total Votes Cast: {{ totalVotes }}
+          <button @click="scrollToVoters" class="view-voters-link">
+            View Voters
+          </button>
+        </div>
+      </div>
+
       <!-- Loading state -->
       <div v-if="isLoading" class="loading-state">
         <div class="spinner"></div>
@@ -21,68 +31,7 @@
       </div>
 
       <!-- Results -->
-      <div v-else>
-        <!-- Total Votes Counter -->
-        <div class="votes-section">
-          <div class="text-left">
-            <p class="text-gray-600">
-              Total Votes Cast: <span class="font-bold text-lg">{{ totalVotes }}</span>
-            </p>
-          </div>
-
-          <!-- Voters List -->
-          <div v-if="voters.length > 0" class="voters-section">
-            <h3 class="voters-title text-xl mb-4">Voters</h3>
-            <div class="voters-list">
-              <div
-                v-for="voter in voters"
-                :key="voter.id"
-                class="voter-card hover:bg-gray-50"
-              >
-                <button 
-                  @click="toggleVoterDetails(voter)"
-                  class="voter-button py-4"
-                >
-                  <div class="voter-button-content">
-                    <span class="voter-name text-lg">{{ voter.displayName }}</span>
-                    <svg 
-                      class="w-[25px] h-[25px] text-gray-400 transition-transform duration-200"
-                      :class="{ 'transform rotate-90': selectedVoterId === voter.id }"
-                      xmlns="http://www.w3.org/2000/svg" 
-                      viewBox="0 0 20 20" 
-                      fill="currentColor"
-                    >
-                      <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                    </svg>
-                  </div>
-                </button>
-                
-                <!-- Voter Details -->
-                <div 
-                  v-if="selectedVoterId === voter.id"
-                  class="voter-details bg-gray-50 border-t border-gray-200"
-                >
-                  <div 
-                    v-for="vote in voter.votes" 
-                    :key="vote.countryId"
-                    class="vote-item hover:bg-white"
-                  >
-                    <div class="country-info">
-                      <span class="country-flag text-xl" role="img">
-                        {{ getCountryFlag(vote.countryId) }}
-                      </span>
-                      <span class="country-name font-medium">{{ vote.countryId }}</span>
-                    </div>
-                    <span class="points-badge bg-blue-50 text-blue-600">
-                      {{ vote.points }} points
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <div v-else class="results-wrapper">
         <!-- Leaderboard Table -->
         <div class="leaderboard-grid">
           <template v-for="(country, index) in sortedResults" :key="country.name">
@@ -98,6 +47,59 @@
         <!-- No Results Message -->
         <div v-if="sortedResults.length === 0" class="text-center py-8">
           <p class="text-gray-600">No results available yet</p>
+        </div>
+
+        <!-- Voters Section -->
+        <div ref="votersSection" class="voters-section" :class="{ 'animate-in': isVotersSectionVisible }">
+          <h2 class="section-title">Voters</h2>
+          <!-- Voters List -->
+          <div v-if="voters.length > 0" class="voters-list">
+            <div
+              v-for="voter in voters"
+              :key="voter.id"
+              class="voter-card hover:bg-gray-50"
+            >
+              <button 
+                @click="toggleVoterDetails(voter)"
+                class="voter-button py-4"
+              >
+                <div class="voter-button-content">
+                  <span class="voter-name text-lg">{{ voter.displayName }}</span>
+                  <svg 
+                    class="text-gray-400 transition-transform duration-200"
+                    :class="{ 'transform rotate-90': selectedVoterId === voter.id }"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 20 20" 
+                    fill="currentColor"
+                  >
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+              </button>
+              
+              <!-- Voter Details -->
+              <div 
+                v-if="selectedVoterId === voter.id"
+                class="voter-details bg-gray-50 border-t border-gray-200"
+              >
+                <div 
+                  v-for="vote in voter.votes" 
+                  :key="vote.countryId"
+                  class="vote-item hover:bg-white"
+                >
+                  <div class="country-info">
+                    <span class="country-flag text-xl" role="img">
+                      {{ getCountryFlag(vote.countryId) }}
+                    </span>
+                    <span class="country-name font-medium">{{ vote.countryId }}</span>
+                  </div>
+                  <span class="points-badge bg-blue-50 text-blue-600">
+                    {{ vote.points }} points
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -121,7 +123,11 @@
               class="primary-button"
               title="Close details"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
               <span>Close</span>
@@ -190,6 +196,9 @@ const isGoogleUser = computed(() => user.value?.type === 'google');
 const isAdmin = computed(() => user.value?.email === 'dprybysh@gmail.com');
 
 const selectedVoterId = ref(null);
+
+const votersSection = ref(null);
+const isVotersSectionVisible = ref(false);
 
 // Sort results by points in descending order, then alphabetically
 const sortedResults = computed(() => {
@@ -453,9 +462,32 @@ const toggleVoterDetails = (voter) => {
   selectedVoterId.value = selectedVoterId.value === voter.id ? null : voter.id;
 };
 
+const scrollToVoters = () => {
+  votersSection.value?.scrollIntoView({ 
+    behavior: 'smooth',
+    block: 'start'
+  });
+};
+
 onMounted(() => {
   loadResults();
   loadVoters();
+
+  // Observer for animation
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          isVotersSectionVisible.value = true;
+        }
+      });
+    },
+    { threshold: 0.1 }
+  );
+
+  if (votersSection.value) {
+    observer.observe(votersSection.value);
+  }
 });
 
 onUnmounted(() => {
@@ -472,6 +504,31 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Standardize all SVG icons */
+svg {
+  width: 25px !important;
+  height: 25px !important;
+  min-width: 25px;
+  min-height: 25px;
+}
+
+.voter-button-content svg {
+  width: 25px !important;
+  height: 25px !important;
+  min-width: 25px;
+  min-height: 25px;
+}
+
+.w-5,
+.h-5,
+.w-6,
+.h-6 {
+  width: 25px !important;
+  height: 25px !important;
+  min-width: 25px;
+  min-height: 25px;
+}
+
 .admin-danger-button {
   background-color: #ef4444;
   color: white;
@@ -505,40 +562,43 @@ onUnmounted(() => {
 }
 
 .voters-section {
-  margin: 2rem 0;
-  padding: 1rem;
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: var(--spacing-12);
+  padding-top: var(--spacing-8);
+  border-top: 2px solid var(--color-gray-200);
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  background: var(--color-white);
+  padding: var(--spacing-6);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+  max-width: 800px;
+  margin: var(--spacing-12) auto;
+  box-sizing: border-box;
 }
 
-.voters-title {
+.section-title {
+  font-size: var(--font-size-xl);
+  color: var(--color-gray-800);
+  margin-bottom: var(--spacing-6);
+  text-align: center;
   font-weight: 600;
-  color: var(--color-gray-700);
-  padding-left: 1rem;
 }
 
 .voters-list {
   display: flex;
   flex-direction: column;
   width: 100%;
-}
-
-.voter-button-content svg {
-  margin-right: 0.5rem;
-  width: 25px;
-}
-
-.flex-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
 }
 
 .voter-card {
   background: white;
   border-bottom: 1px solid var(--color-gray-200);
   transition: all 0.3s ease;
+  padding: var(--spacing-2);
 }
 
 .voter-button {
@@ -549,7 +609,7 @@ onUnmounted(() => {
   padding: 0.75rem 1rem;
   background: transparent;
   border: none;
-  color: var(--color-gray-700);
+  color: var(--color-gray-900);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -617,9 +677,92 @@ onUnmounted(() => {
   transition: all 0.2s ease;
 }
 
-@media (max-width: 640px) {
-  .voters-list {
+@media (max-width: 768px) {
+  .content-container {
+    position: relative;
+    z-index: 1;
     width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-4);
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .results-wrapper {
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .leaderboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .country-row {
+    display: grid;
+    grid-template-columns: minmax(30px, 40px) minmax(30px, 40px) 1fr minmax(50px, 80px);
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    color: #0e0e80;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 0.25rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .rank-box {
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
+  }
+
+  .voters-section {
+    margin-top: var(--spacing-8);
+    padding: var(--spacing-4);
+    margin: var(--spacing-8) 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .results-header {
+    width: 100%;
+    max-width: 100%;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    padding: var(--spacing-3);
+    margin: 0 0 var(--spacing-6) 0;
+  }
+
+  .total-votes {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--spacing-2);
+    margin: auto;
+  }
+
+  .view-voters-link {
+    padding: var(--spacing-2) var(--spacing-4);
+    color: var(--color-primary-light);
+    background: none;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-base);
+    text-decoration: underline;
+  }
+
+  .view-voters-link:hover {
+    color: var(--color-primary-dark);
   }
 }
 
@@ -648,11 +791,14 @@ onUnmounted(() => {
   gap: 0.5rem;
   max-width: 800px;
   margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 var(--spacing-4);
 }
 
 .country-row {
   display: grid;
-  grid-template-columns: 60px 60px 1fr 100px;
+  grid-template-columns: minmax(35px, 60px) minmax(35px, 60px) 1fr minmax(60px, 100px);
   align-items: center;
   padding: 1rem 1.5rem;
   border-radius: 8px;
@@ -660,7 +806,8 @@ onUnmounted(() => {
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   margin-bottom: 0.5rem;
-	margin-bottom: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .rank-box {
@@ -738,5 +885,53 @@ onUnmounted(() => {
 .content-container {
   position: relative; /* Add this to keep content above the light effect */
   z-index: 1;        /* Ensure content stays above the animated background */
+}
+
+/* Results Header */
+.results-header {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto var(--spacing-6) auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-4);
+  background: var(--color-gray-50);
+  border-radius: var(--radius-lg);
+  box-sizing: border-box;
+}
+
+.total-votes {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  font-size: var(--font-size-lg);
+  color: var(--color-gray-700);
+  font-weight: 500;
+  margin: auto;
+}
+
+.view-voters-link {
+  padding: var(--spacing-2) var(--spacing-4);
+  color: var(--color-primary-light);
+  background: none;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-base);
+  text-decoration: underline;
+}
+
+.view-voters-link:hover {
+  color: var(--color-primary-dark);
+}
+
+/* Add wrapper class for results */
+.results-wrapper {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 </style> 

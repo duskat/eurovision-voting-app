@@ -447,6 +447,19 @@ const startNewVote = async () => {
   body.dropdown-open {
     overflow: hidden;
   }
+
+  .action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-4);
+    padding: 0 var(--spacing-4);
+  }
+  
+  .view-results-button,
+  .update-vote-button {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 /* Success message container */
@@ -503,6 +516,11 @@ const startNewVote = async () => {
 /* Add styles for the view results button */
 .action-buttons {
   margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-4);
+  width: 100%;
 }
 
 .view-results-button {
@@ -511,7 +529,8 @@ const startNewVote = async () => {
   background: #4F46E5;
   color: white;
   border-radius: 100px;
-  text-decoration: none;
+  border: none;
+  cursor: pointer;
   font-weight: 500;
   transition: all 0.2s ease;
 }
