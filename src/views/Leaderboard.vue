@@ -7,9 +7,28 @@
       <div class="results-header">
         <div class="total-votes">
           Total Votes Cast: {{ totalVotes }}
-          <button @click="scrollToVoters" class="view-voters-link">
-            View Voters
-          </button>
+          <div class="leaderboard-actions">
+            <button 
+              @click="scrollToVoters"
+              class="view-voters-link"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              View Voters
+            </button>
+
+            <router-link 
+              v-if="hasVoted"
+              to="/vote" 
+              class="update-votes-button"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Update My Votes
+            </router-link>
+          </div>
         </div>
       </div>
 
@@ -182,7 +201,7 @@ const resetError = ref(false);
 const selectedVoter = ref(null);
 
 const { user } = useAuth();
-const { resetAllResults } = useVoting();
+const { resetAllResults, checkExistingVote } = useVoting();
 const router = useRouter();
 
 const showDeleteUsersModal = ref(false);
@@ -199,6 +218,8 @@ const selectedVoterId = ref(null);
 
 const votersSection = ref(null);
 const isVotersSectionVisible = ref(false);
+
+const hasVoted = ref(false);
 
 // Sort results by points in descending order, then alphabetically
 const sortedResults = computed(() => {
@@ -469,7 +490,7 @@ const scrollToVoters = () => {
   });
 };
 
-onMounted(() => {
+onMounted(async () => {
   loadResults();
   loadVoters();
 
@@ -487,6 +508,13 @@ onMounted(() => {
 
   if (votersSection.value) {
     observer.observe(votersSection.value);
+  }
+
+  try {
+    const existingVote = await checkExistingVote();
+    hasVoted.value = !!existingVote;
+  } catch (error) {
+    console.error('Error checking existing vote:', error);
   }
 });
 
@@ -992,5 +1020,42 @@ svg {
   .country-name {
     font-size: medium;
   }
+}
+
+.leaderboard-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-8);
+}
+
+.update-votes-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: white !important;
+  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.update-votes-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.update-votes-button svg {
+  width: 20px;
+  height: 20px;
+  color: white;
 }
 </style> 

@@ -217,7 +217,13 @@ const getDropdownPosition = (index) => {
   return 'up';
 };
 
-const toggleDropdown = (index) => {
+const toggleDropdown = async (index) => {
+  if (voteSubmitted.value && !isModifying.value) {
+    showUpdateConfirmation.value = true;
+    pendingVoteUpdate.value = { index, type: 'select' };
+    return;
+  }
+
   activeDropdown.value = activeDropdown.value === index ? null : index;
   if (activeDropdown.value !== null) {
     document.body.classList.add('dropdown-open');
@@ -271,7 +277,7 @@ onUnmounted(() => {
 const selectCountry = async (index, country) => {
   if (voteSubmitted.value && !isModifying.value) {
     showUpdateConfirmation.value = true;
-    pendingVoteUpdate.value = { index, country };
+    pendingVoteUpdate.value = { index, country, type: 'country' };
     return;
   }
   
@@ -281,11 +287,20 @@ const selectCountry = async (index, country) => {
 };
 
 const confirmUpdate = () => {
-  if (pendingVoteUpdate.value) {
-    const { index, country } = pendingVoteUpdate.value;
+  if (!pendingVoteUpdate.value) return;
+
+  const { index, country, type } = pendingVoteUpdate.value;
+  
+  if (type === 'country') {
     selectedCountries.value[index] = country;
-    isModifying.value = true;
+    activeDropdown.value = null;
+    document.body.classList.remove('dropdown-open');
+  } else if (type === 'select') {
+    activeDropdown.value = index;
+    document.body.classList.add('dropdown-open');
   }
+  
+  isModifying.value = true;
   showUpdateConfirmation.value = false;
   pendingVoteUpdate.value = null;
 };
@@ -297,6 +312,8 @@ const cancelUpdate = () => {
   showUpdateConfirmation.value = false;
   pendingVoteUpdate.value = null;
   isModifying.value = false;
+  activeDropdown.value = null;
+  document.body.classList.remove('dropdown-open');
 };
 
 // Update startNewVote to handle vote clearing
