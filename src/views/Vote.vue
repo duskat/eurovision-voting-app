@@ -58,12 +58,43 @@
         <!-- Submit Button -->
         <div class="button-container">
           <button
-            @click="submitVotes"
-            :disabled="!isValid"
+            @click="handleVoteSubmit"
+            :disabled="!isValid || isSubmitting || (voteSubmitted && !isModifying) || (voteSubmitted && isModifying && !hasVoteChanges)"
             class="submit-vote-button"
           >
-            Submit Vote
+            <span v-if="isSubmitting" class="spinner"></span>
+            <span v-if="voteSubmitted && !isModifying">Vote Submitted</span>
+            <span v-else-if="voteSubmitted && isModifying && !hasVoteChanges">No Changes Made</span>
+            <span v-else-if="voteSubmitted && isModifying">Update Vote</span>
+            <span v-else-if="!isValid">Select All Countries</span>
+            <span v-else>Submit Vote</span>
           </button>
+        </div>
+      </div>
+
+      <!-- Vote Update Confirmation Modal -->
+      <div v-if="showUpdateConfirmation" class="confirmation-modal" @click="cancelUpdate">
+        <div class="confirmation-content" @click.stop>
+          <h3 class="confirmation-title">Update Your Vote?</h3>
+          <p class="confirmation-message">
+            You have already submitted your vote. Are you sure you want to update it?
+          </p>
+          <div class="confirmation-buttons">
+            <button @click="confirmUpdate" class="confirm-button">
+              Yes, update my vote
+            </button>
+            <button @click="cancelUpdate" class="cancel-button">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading Overlay -->
+      <div v-if="isSubmitting" class="loading-overlay">
+        <div class="loading-container">
+          <div class="loading-spinner"></div>
+          <p class="loading-text">{{ isModifying ? 'Updating' : 'Submitting' }} your vote...</p>
         </div>
       </div>
     </div>
@@ -94,9 +125,14 @@ const selectedCountries = ref([null, null, null]);
 const voteSubmitted = ref(false);
 const isModifying = ref(false);
 const activeDropdown = ref(null);
+const isSubmitting = ref(false);
+const showUpdateConfirmation = ref(false);
+const pendingVoteUpdate = ref(null);
+const originalVotes = ref(null);
+const hasChanges = ref(false);
 
 const isValid = computed(() => {
-  return selectedCountries.value.every(country => country) &&
+  return selectedCountries.value.every(country => country !== null) &&
          new Set(selectedCountries.value).size === 3;
 });
 
@@ -119,7 +155,8 @@ const loadExistingVotes = async () => {
         .sort((a, b) => b.points - a.points)
         .map(vote => countries.value.find(country => country.id === vote.countryId));
       
-      selectedCountries.value = votedCountries;
+      selectedCountries.value = [...votedCountries];
+      originalVotes.value = [...votedCountries];
       voteSubmitted.value = true;
     }
   } catch (err) {
@@ -128,21 +165,36 @@ const loadExistingVotes = async () => {
   }
 };
 
-const submitVotes = async () => {
-  if (isValid.value) {
-    try {
-      await submit(selectedCountries.value);
-      voteSubmitted.value = true;
-      error.value = null;
-      
-      // Show success message and redirect
-      setTimeout(() => {
-        router.push('/leaderboard');
-      }, 2000);
-    } catch (err) {
-      console.error('Error submitting votes:', err);
-      error.value = 'Failed to submit votes. Please try again.';
-    }
+const hasVoteChanges = computed(() => {
+  if (!originalVotes.value) return false;
+  
+  return selectedCountries.value.some((country, index) => {
+    const originalId = originalVotes.value[index]?.id;
+    const currentId = selectedCountries.value[index]?.id;
+    return originalId !== currentId;
+  });
+});
+
+const handleVoteSubmit = async () => {
+  if (!isValid.value) return;
+  
+  if (voteSubmitted.value && !hasVoteChanges.value) {
+    return;
+  }
+
+  try {
+    isSubmitting.value = true;
+    await submit(selectedCountries.value);
+    voteSubmitted.value = true;
+    isModifying.value = false;
+    originalVotes.value = selectedCountries.value.map(vote => ({ ...vote }));
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    router.push('/leaderboard');
+  } catch (error) {
+    console.error('Error submitting vote:', error);
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
@@ -216,10 +268,35 @@ onUnmounted(() => {
   document.body.classList.remove('dropdown-open');
 });
 
-const selectCountry = (index, country) => {
+const selectCountry = async (index, country) => {
+  if (voteSubmitted.value && !isModifying.value) {
+    showUpdateConfirmation.value = true;
+    pendingVoteUpdate.value = { index, country };
+    return;
+  }
+  
   selectedCountries.value[index] = country;
   activeDropdown.value = null;
   document.body.classList.remove('dropdown-open');
+};
+
+const confirmUpdate = () => {
+  if (pendingVoteUpdate.value) {
+    const { index, country } = pendingVoteUpdate.value;
+    selectedCountries.value[index] = country;
+    isModifying.value = true;
+  }
+  showUpdateConfirmation.value = false;
+  pendingVoteUpdate.value = null;
+};
+
+const cancelUpdate = () => {
+  if (!isModifying.value) {
+    selectedCountries.value = originalVotes.value.map(vote => ({ ...vote }));
+  }
+  showUpdateConfirmation.value = false;
+  pendingVoteUpdate.value = null;
+  isModifying.value = false;
 };
 
 // Update startNewVote to handle vote clearing
