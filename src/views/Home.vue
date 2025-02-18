@@ -73,7 +73,7 @@
 
       <!-- Login State -->
       <div v-else class="login-section">
-        <p class="login-text">Please log in to continue</p>
+        <p class="login-text">Please enter at least 2 characters to continue.</p>
         
         <!-- Quick Login Form -->
         <form @submit.prevent="handleQuickLogin" class="quick-login-form">
