@@ -769,16 +769,29 @@ body {
 
 .action-buttons .primary-button,
 .action-buttons .secondary-button {
-  width: 200px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  font-size: 16px;
-  border-radius: 999px;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: white !important;
+  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
   font-weight: 500;
   text-decoration: none;
-  transition: var(--transition-base);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  width: auto;
+  min-width: 200px;
+}
+
+.action-buttons .primary-button:hover,
+.action-buttons .secondary-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 /* 
@@ -816,6 +829,7 @@ body {
   cursor: pointer;
   transition: var(--transition-base);
   margin-bottom: 20px;
+  font-size: 12px;
 }
 
 .logout-button:hover {
@@ -1624,6 +1638,7 @@ svg.logout-icon,
   text-decoration: none !important;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-size: 16px;
 }
 
 .view-voters-link:hover {
@@ -1644,17 +1659,28 @@ svg.logout-icon,
   fill: none !important;
 }
 
-.update-votes-button svg {
-  width: 20px;
-  height: 20px;
+.update-votes-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
   color: white !important;
-  fill: none !important;
-  stroke: white !important;
+  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 16px;
 }
 
-.update-votes-button path {
-  stroke: white !important;
-  fill: none !important;
+.update-votes-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 .leaderboard-actions {

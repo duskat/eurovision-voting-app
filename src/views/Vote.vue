@@ -17,6 +17,9 @@
 
       <div v-else class="results-wrapper">
         <h2 class="section-title">Your Votes</h2>
+        <p class="vote-instructions">
+          Assign points to your favorite countries by selecting them from the dropdown menus below.
+        </p>
         
         <div class="vote-grid">
           <div v-for="(points, index) in [12, 10, 8]" :key="points" class="vote-row">
@@ -337,9 +340,25 @@ const startNewVote = async () => {
   font-size: 1.5rem;
   font-weight: 600;
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.vote-instructions {
+  color: white;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+  .vote-instructions {
+    font-size: 0.9rem;
+    padding: 0 1rem;
+  }
 }
 
 .button-container {
