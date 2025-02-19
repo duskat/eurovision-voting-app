@@ -3,5 +3,6 @@ import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
   plugins: [vue()],
-  base: '/eurovision-voting-app/',
+  // Remove the GitHub Pages base path since we're using Firebase now
+  // base: '/eurovision-voting-app/',
 });
