@@ -14,18 +14,28 @@ const routes = [
     path: '/vote',
     name: 'Vote',
     component: Vote,
-    meta: { requiresAuth: true },
+    meta: {
+      requiresAuth: true,
+      authMessage: 'To cast a vote, please log in.',
+    },
   },
   {
     path: '/leaderboard',
     name: 'Leaderboard',
     component: Leaderboard,
-    meta: { requiresAuth: true },
+    meta: {
+      requiresAuth: true,
+      authMessage: 'To see vote results, you need to log in.',
+    },
   },
   {
     path: '/login',
     name: 'Login',
     component: () => import('../views/Login.vue'),
+    props: (route) => ({
+      redirect: route.query.redirect,
+      message: route.query.message,
+    }),
   },
 ];
 
@@ -52,12 +62,13 @@ router.beforeEach(async (to, from, next) => {
     const guestUser = localStorage.getItem('guestUser');
 
     if (!firebaseUser && !guestUser) {
-      // Store the intended destination
+      // Store the intended destination and message
       localStorage.setItem('intendedRoute', to.fullPath);
-      // Redirect to login
+      // Redirect to login with message
       next({
         path: '/login',
         query: { redirect: to.fullPath },
+        state: { message: to.meta.authMessage },
       });
     } else {
       // User is authenticated, proceed

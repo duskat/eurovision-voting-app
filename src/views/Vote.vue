@@ -352,6 +352,7 @@ const startNewVote = async () => {
   font-size: 1rem;
   line-height: 1.5;
   opacity: 0.9;
+  margin: 20px;
 }
 
 @media (max-width: 768px) {

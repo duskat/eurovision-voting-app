@@ -1,7 +1,14 @@
 <template>
   <div class="page-container">
     <div class="content-container">
+      <h1 class="eurovision-title">EUROVISION VOTING 2025</h1>
+
       <div class="login-section">
+        <!-- Auth Message -->
+        <h2 v-if="authMessage" class="auth-notification">
+          {{ authMessage }}
+        </h2>
+        
         <p class="login-text">Please enter at least 2 characters to continue.</p>
         
         <!-- Quick Login Form -->
@@ -61,6 +68,15 @@ const { login, signInWithName, isLoggedIn } = useAuth();
 
 const nameInput = ref('');
 const nameError = ref(false);
+const authMessage = computed(() => {
+  const redirect = route.query.redirect;
+  if (redirect === '/vote') {
+    return 'To cast a vote, please log in.';
+  } else if (redirect === '/leaderboard') {
+    return 'To see vote results, you need to log in.';
+  }
+  return '';
+});
 
 const isValidName = computed(() => {
   const trimmedName = nameInput.value.trim();
@@ -110,5 +126,44 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Add your styles here */
+.login-section {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.login-text {
+  color: white;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.auth-notification {
+  margin-bottom: 2rem;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .login-section {
+    padding: 1rem;
+  }
+
+  .auth-notification {
+    font-size: 0.9rem;
+    margin: 0 0 1.5rem 0;
+  }
+
+  .login-text {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+}
 </style> 
